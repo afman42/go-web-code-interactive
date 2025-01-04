@@ -1,3 +1,5 @@
+Sama seperti ada di CodeWars,LeetCode,dll
+
 # CODE INTERACTIVE WEB
 
 ### Kebutuhan
