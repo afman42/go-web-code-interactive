@@ -16,7 +16,7 @@
 ### Kendala
 
 - PATH NodeJS executable di windows ketika production
-- Atur path di urutan nomor 65 di file `main.go`
+- Atur path di urutan nomor 65 di file `main.go`. global: `node`. relative: `path node.exe`.
 
 ![IMG_PROD](WEB.PNG "Title")
 
