@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Code Interactive</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"
+    />
+  </head>
+  <body>
+    <div class="columns container">
+      <div class="column">
+        <label>file: index.js</label>
+        <form method="post" action="/">
+          <textarea class="textarea" rows="20" cols="60" name="txt">
+console.log("hello world");
+          </textarea>
+          <br />
+          <button type="submit" class="button is-dark">Send</button>
+        </form>
+      </div>
+      <div class="column">
+        <div class="column">
+          Stdout:
+          <br />
+          <blockquote>{{if .out}}{{.out}}{{else}}Nothing{{end}}</blockquote>
+        </div>
+        <div class="column">
+          Stderr:
+          <br />
+          <blockquote>
+            {{if .errout}}{{.errout}}{{else}}Nothing{{end}}
+          </blockquote>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
