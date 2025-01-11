@@ -1,8 +1,12 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
+	"flag"
 	"fmt"
+	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -11,7 +15,36 @@ import (
 	"github.com/afman42/go-web-code-interactive/utils"
 )
 
+//go:embed web/dist
+var WebContent embed.FS
+
+const (
+	ModeDev     = "dev"
+	ModeProd    = "prod"
+	ModePreview = "preview"
+)
+
+var (
+	IpCors string
+	Port   string
+	Mode   string
+)
+
 func main() {
+	flag.StringVar(&IpCors, "ip-cors", "http://localhost:5173", "ip or domain")
+	flag.StringVar(&Port, "port", "8000", "server port")
+	flag.Func("mode", "mode:dev,preview,prod", func(s string) error {
+		Mode = ModeDev
+		if s == ModeProd {
+			Mode = s
+		}
+		if s == ModePreview {
+			Mode = s
+			IpCors = "http://localhost:" + Port
+		}
+		return nil
+	})
+	flag.Parse()
 	if _, err := os.Stat("./tmp"); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.Mkdir("tmp", os.ModePerm); err != nil {
@@ -29,11 +62,22 @@ func main() {
 			panic(err)
 		}
 	}
+	dist, err := fs.Sub(WebContent, "web/dist")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", index)
-	fmt.Println("Server starting in localhost:8000")
-	err = http.ListenAndServe(":8000", mux)
-	log.Fatal(err)
+	if Mode == ModePreview {
+		mux.Handle("/assets/", http.FileServer(http.FS(dist)))
+	}
+	fmt.Println("Server starting in localhost:" + Port)
+	err = http.ListenAndServe(":"+Port, mux)
+	if err != nil {
+		log.Fatal("Something went wrong", err)
+		os.Exit(1)
+	}
 }
 
 type Data struct {
@@ -49,23 +93,22 @@ func index(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Access-Control-Allow-Origin", IpCors)
 	w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	switch r.Method {
 	case http.MethodGet:
-		// var tmpl, err = template.ParseFiles("./views/index.html")
-		// if err != nil {
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
-		//
-		// var data = map[string]string{"out": "", "errout": ""}
-		// err = tmpl.Execute(w, data)
-		// if err != nil {
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// }
-		return
+		var tmp, err = template.ParseFS(WebContent, "web/dist/index.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Add("Content-Type", "text/html")
+		err = tmp.Execute(w, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 	case http.MethodPost:
 		var data Data
@@ -96,6 +139,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 		data.StatusCode = http.StatusOK
 		w.Header().Set("Content-Type", "application/json")
 		http.StatusText(http.StatusOK)
+		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data)
 		return
 	case http.MethodOptions:

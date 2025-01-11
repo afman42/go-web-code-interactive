@@ -4,6 +4,8 @@ run/api:
 run/web:
 	cd web/; npm run dev;
 
+run/preview_linux: build/linux preview/api_linux
+
 build/linux:
 	@echo "Build Binary Linux"
 	GOOS=linux GOARCH=amd64 go build -ldflags="-s" -o=./bin/linux_amd64/app main.go 
@@ -22,11 +24,7 @@ build/web:
 
 preview/api_linux:
 	@echo "Preview"
-	./bin/linux_amd64/app
-
-preview/dist_web:
-	@echo "Preview Dist Web"
-	cd web; npm run preview;
+	./bin/linux_amd64/app -mode preview
 
 build: build/linux build/windows build/web
 
