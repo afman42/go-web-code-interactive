@@ -33,7 +33,7 @@ async function send(){
 <main class="columns">
   <div class="column" style="margin:1rem;">
     <div style="margin-bottom:0.5rem;border-color:black; border-width: 2px;border-style: solid;">
-      <CodeMirror bind:value on:change={(e) => onChange(e)} on:ready={(e) => view = e.detail} lang={javascript()}/> </div> <div> <button class="button is-light" disabled={disabled} onclick={send} type="button">Send</button> </div>
+      <CodeMirror bind:value readonly={disabled} on:change={(e) => onChange(e)} on:ready={(e) => view = e.detail} lang={javascript()}/> </div> <div> <button class="button is-light" disabled={disabled} onclick={send} type="button">Send</button> </div>
   </div>
 
   <div class="column">
