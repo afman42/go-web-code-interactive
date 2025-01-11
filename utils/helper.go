@@ -1,15 +1,21 @@
-package main
+package utils
 
 import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
+	"path/filepath"
+	"runtime"
 
 	"os"
 	"os/exec"
 	"time"
 )
+
+const WindowsFolderTmp = "\\tmp\\"
+const LinuxFolderTmp = "/tmp/"
 
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
@@ -59,4 +65,17 @@ func MoveFile(sourcePath, destPath string) error {
 		return fmt.Errorf("Couldn't remove source file: %v", err)
 	}
 	return nil
+}
+
+func PathFileTemp(filename string) string {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	os := runtime.GOOS
+	dir = dir + LinuxFolderTmp
+	if os == "windows" {
+		dir = dir + WindowsFolderTmp
+	}
+	return filepath.Join(dir + filename)
 }
