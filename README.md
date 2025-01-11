@@ -17,7 +17,6 @@ Sama seperti ada di CodeWars,LeetCode,dll
 ### Preview Setelah Build
 
 - Menjalankan di linux: `preview\api_linux`
-- Menjalankan web: `preview\dist_web`
 - Menjalankan di windows: `not testing`
 
 ### Production
@@ -32,8 +31,9 @@ Sama seperti ada di CodeWars,LeetCode,dll
 
 ### Todo
 
-- [] Buat flag parse di `main.go`
-- [] Embed file html dan folder dist di file `main.go`
+- [x] Buat flag parse di `main.go`
+- [x] Embed file html dan folder dist di file `main.go`
+- [] File Docker Compose dan Masukin Web
 
 ![IMG_PROD](WEB.PNG "Title")
 
