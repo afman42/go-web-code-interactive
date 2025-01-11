@@ -35,6 +35,8 @@ Sama seperti ada di CodeWars,LeetCode,dll
 - [x] Embed file html dan folder dist di file `main.go`
 - [] File Docker Compose dan Masukin Web
 
-![IMG_PROD](WEB.PNG "Title")
+![IMG_PROD](images/WEB.PNG "Title")
 
-![IMG_PROD](IMG_PROD.PNG "Title")
+![IMG_PROD](images/IMG_PROD.PNG "Title")
+
+![IMG_PROD](images/after-prod-img.png "Title")
