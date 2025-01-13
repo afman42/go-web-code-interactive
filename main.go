@@ -13,10 +13,13 @@ import (
 	"path/filepath"
 
 	"github.com/afman42/go-web-code-interactive/utils"
+	"github.com/joho/godotenv"
 )
 
 //go:embed web/dist
 var WebContent embed.FS
+
+var IpCors string
 
 const (
 	ModeDev     = "dev"
@@ -24,27 +27,28 @@ const (
 	ModePreview = "preview"
 )
 
-var (
-	IpCors string
-	Port   string
-	Mode   string
-)
-
 func main() {
-	flag.StringVar(&IpCors, "ip-cors", "http://localhost:5173", "ip or domain")
-	flag.StringVar(&Port, "port", "8000", "server port")
+	Mode := ModeDev
+	env := ".env.local"
 	flag.Func("mode", "mode:dev,preview,prod", func(s string) error {
-		Mode = ModeDev
-		if s == ModeProd {
-			Mode = s
-		}
 		if s == ModePreview {
-			Mode = s
-			IpCors = "http://localhost:" + Port
+			Mode = ModePreview
+			env = ".env.preview"
+		}
+		if s == ModeProd {
+			Mode = ModeProd
+			env = ".env.prod"
 		}
 		return nil
 	})
 	flag.Parse()
+	err := godotenv.Load(env)
+	if err != nil {
+		log.Fatal("Error loading " + env + " file")
+	}
+
+	IpCors = os.Getenv("CORS_DOMAIN")
+	Port := os.Getenv("APP_PORT")
 	if _, err := os.Stat("./tmp"); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.Mkdir("tmp", os.ModePerm); err != nil {
@@ -69,7 +73,7 @@ func main() {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", index)
-	if Mode == ModePreview {
+	if Mode == ModePreview || Mode == ModeProd {
 		mux.Handle("/assets/", http.FileServer(http.FS(dist)))
 	}
 	fmt.Println("Server starting in localhost:" + Port)

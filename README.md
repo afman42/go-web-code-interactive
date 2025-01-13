@@ -16,16 +16,17 @@ Sama seperti ada di CodeWars,LeetCode,dll
 
 ### Preview Setelah Build
 
-- Menjalankan di linux: `preview\api_linux`
+- Menjalankan di linux: `make run/preview_linux`
 - Menjalankan di windows: `not testing`
 
 ### Production
 
-- Menjalankan `make build`
+- buat file `.env.prod` di golang dan file `.env.production` di web
+- Menjalankan `make build && make deploy/tar && make deploy`
 
 ### Kendala
 
-- PATH NodeJS executable di windows ketika production
+- PATH NodeJS executable di windows dan linux ketika production
 - Atur path di urutan nomor 65 di file `main.go`. global: `node`. relative: `path node.exe`.
 - Atur Cors di bagian file `main.go` dan atur port di bagian file `.env` folder web
 
@@ -33,7 +34,7 @@ Sama seperti ada di CodeWars,LeetCode,dll
 
 - [x] Buat flag parse di `main.go`
 - [x] Embed file html dan folder dist di file `main.go`
-- [] File Docker Compose dan Masukin Web
+- [x] File Docker dan Masukin Web
 
 ![IMG_PROD](images/WEB.PNG "Title")
 
