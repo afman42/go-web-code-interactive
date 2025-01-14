@@ -72,7 +72,8 @@ func main() {
 		return
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", index)
+	handler := utils.WrapHandlerWithLogging(http.HandlerFunc(index))
+	mux.Handle("/", handler)
 	if Mode == ModePreview || Mode == ModeProd {
 		mux.Handle("/assets/", http.FileServer(http.FS(dist)))
 	}

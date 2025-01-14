@@ -35,6 +35,7 @@ Sama seperti ada di CodeWars,LeetCode,dll
 - [x] Buat flag parse di `main.go`
 - [x] Embed file html dan folder dist di file `main.go`
 - [x] File Docker dan Masukin Web
+- [x] Log all routes di web
 
 ![IMG_PROD](images/WEB.PNG "Title")
 
