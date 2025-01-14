@@ -7,6 +7,7 @@ Sama seperti ada di CodeWars,LeetCode,dll
 - Install NodeJS terbaru
 - Install Golang terbaru
 - Install CMAKE
+- Install PHP
 
 ### Development
 
