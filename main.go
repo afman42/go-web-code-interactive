@@ -57,7 +57,7 @@ func main() {
 		}
 	}
 
-	files, err := filepath.Glob(utils.PathFileTemp("*.js"))
+	files, err := filepath.Glob(utils.PathFileTemp("*"))
 	if err != nil {
 		panic(err)
 	}
@@ -90,6 +90,7 @@ type Data struct {
 	Stdout     string `json:"out"`
 	Stderr     string `json:"errout"`
 	StatusCode int    `json:"statusCode"`
+	Language   string `json:"lang"`
 }
 
 // https://www.alexedwards.net/blog/which-go-router-should-i-use
@@ -123,6 +124,10 @@ func index(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		filename := "index-" + utils.StringWithCharset(5) + ".js"
+		if data.Language == "php" {
+			data.Language = "php"
+			filename = "index-" + utils.StringWithCharset(5) + ".php"
+		}
 		err = os.WriteFile(filename, []byte(data.Txt), 0755)
 		if err != nil {
 			fmt.Printf("unable to write file: %w", err)
@@ -131,7 +136,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("error movefile: ", err)
 		}
-		out, errout, err := utils.Shellout("node", utils.PathFileTemp(filename))
+		out, errout, err := utils.Shellout(data.Language, utils.PathFileTemp(filename))
 		if err != nil {
 			log.Printf("error shell: %v\n", err)
 		}
