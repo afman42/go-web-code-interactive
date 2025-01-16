@@ -123,9 +123,11 @@ func index(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if data.Language == "" {
+			data.Language = "node"
+		}
 		filename := "index-" + utils.StringWithCharset(5) + ".js"
 		if data.Language == "php" {
-			data.Language = "php"
 			filename = "index-" + utils.StringWithCharset(5) + ".php"
 		}
 		err = os.WriteFile(filename, []byte(data.Txt), 0755)
