@@ -20,10 +20,10 @@ const LinuxFolderTmp = "/tmp/"
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
-func Shellout(language string, command string) (string, string, error) {
+func Shellout(language string, args ...string) (string, string, error) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
-	cmd := exec.Command(language, command)
+	cmd := exec.Command(language, args...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()

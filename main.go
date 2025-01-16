@@ -117,7 +117,10 @@ func index(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case http.MethodPost:
-		var data Data
+		var (
+			data Data
+			args string = "-"
+		)
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -130,6 +133,10 @@ func index(w http.ResponseWriter, r *http.Request) {
 		if data.Language == "php" {
 			filename = "index-" + utils.StringWithCharset(5) + ".php"
 		}
+		if data.Language == "go" {
+			args = "run"
+			filename = "main-" + utils.StringWithCharset(5) + ".go"
+		}
 		err = os.WriteFile(filename, []byte(data.Txt), 0755)
 		if err != nil {
 			fmt.Printf("unable to write file: %w", err)
@@ -138,7 +145,11 @@ func index(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("error movefile: ", err)
 		}
+
 		out, errout, err := utils.Shellout(data.Language, utils.PathFileTemp(filename))
+		if data.Language == "go" {
+			out, errout, err = utils.Shellout(data.Language, args, utils.PathFileTemp(filename))
+		}
 		if err != nil {
 			log.Printf("error shell: %v\n", err)
 		}
