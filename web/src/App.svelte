@@ -29,6 +29,10 @@ async function send(){
   }
 
 }
+function onChangeRadio(event: Event){
+  $langState.value = (event.target as HTMLInputElement).value
+  console.log($langState.value)
+}
 </script>
 
 <main class="columns">
@@ -38,15 +42,18 @@ async function send(){
     </div> 
     <div>
         <button class="button is-light" disabled={disabled} onclick={send} type="button">Send</button> 
-        <div class="select">
-          <select bind:value={$langState.value} onchange={(e) => {
-            let v = (e.target as HTMLInputElement).value
-            $langState.value = v
-          }}>
-            <option value={"node"}>Node</option>
-            <option value={"php"}>PHP<option>
-          </select>
-        </div>
+        <label class="radio">
+        <input type="radio" value="node" onchange={onChangeRadio} checked={$langState.value == "node"}/>
+          Node
+        </label>
+        <label class="radio">
+          <input type="radio" value="php" onchange={onChangeRadio} checked={$langState.value == "php"} />
+          PHP
+        </label>
+        <label class="radio">
+          <input type="radio" value="go" onchange={onChangeRadio} checked={$langState.value == "go"} />
+          Go
+        </label>
       </div>
     </div>
 
