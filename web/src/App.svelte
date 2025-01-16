@@ -42,7 +42,6 @@ async function send(){
           <select bind:value={$langState.value} onchange={(e) => {
             let v = (e.target as HTMLInputElement).value
             $langState.value = v
-            console.log($langState.value)
           }}>
             <option value={"node"}>Node</option>
             <option value={"php"}>PHP<option>
