@@ -1,8 +1,8 @@
 FROM ubuntu:24.10
-FROM node:22 AS node
+FROM node:22-slim AS node
 FROM php:8.3-cli as php
 
-RUN apt update && apt -y install gcc g++
+RUN apt update && apt install gcc g++ libonig-dev libargon2-0 -y
 
 COPY --from=node /usr/lib /usr/lib
 COPY --from=node /usr/local/lib /usr/local/lib
