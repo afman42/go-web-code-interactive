@@ -30,7 +30,7 @@ build/web-staging:
 
 preview/api_linux:
 	@echo "Preview";
-	./bin/linux_amd64/app -mode preview;
+	./bin/linux_amd64/tmp/app -mode preview;
 
 build: build/linux build/windows build/compress build/web
 
