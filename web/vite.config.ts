@@ -9,6 +9,8 @@ export default defineConfig({
       "svelte-codemirror-editor",
       "codemirror",
       "@codemirror/lang-javascript",
+      "@codemirror/lang-go",
+      "@codemirror/lang-php",
     ],
   },
   build: {
