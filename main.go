@@ -91,6 +91,7 @@ type Data struct {
 	Stderr     string `json:"errout"`
 	StatusCode int    `json:"statusCode"`
 	Language   string `json:"lang"`
+	Tipe       string `json:"type"`
 }
 
 // https://www.alexedwards.net/blog/which-go-router-should-i-use
@@ -136,6 +137,17 @@ func index(w http.ResponseWriter, r *http.Request) {
 		if data.Language == "go" {
 			args = "run"
 			filename = "main-" + utils.StringWithCharset(5) + ".go"
+		}
+		if data.Tipe == "stq" {
+			if data.Language == "go" {
+				data.Txt = data.Txt + utils.TxtGo
+			}
+			if data.Language == "php" {
+				data.Txt = data.Txt + utils.TxtPHP
+			}
+			if data.Language == "node" {
+				data.Txt = data.Txt + utils.TxtJS
+			}
 		}
 		err = os.WriteFile(filename, []byte(data.Txt), 0755)
 		if err != nil {
