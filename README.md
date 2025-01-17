@@ -8,6 +8,7 @@ Sama seperti ada di CodeWars,LeetCode,dll
 - Install Golang terbaru
 - Install CMAKE
 - Install PHP
+- Install UPX (compress file)
 
 ### Development
 
@@ -37,6 +38,7 @@ Sama seperti ada di CodeWars,LeetCode,dll
 - [x] Embed file html dan folder dist di file `main.go`
 - [x] File Docker dan Masukin Web
 - [x] Log all routes di web
+- [] Make Web Responsive mobile and dekstop
 
 ![IMG_PROD](images/WEB.PNG "Title")
 
