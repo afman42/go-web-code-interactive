@@ -1,13 +1,20 @@
 <script lang="ts">
+//Component
+import Toaster from "./component/Toaster.svelte"
+//Lib
 import CodeMirror from "svelte-codemirror-editor";
 import type { EditorView } from "@codemirror/view";
 import { onDestroy} from "svelte";
 import { javascript} from "@codemirror/lang-javascript"
+import { go } from "@codemirror/lang-go"
+import { php } from "@codemirror/lang-php"
 import { langState } from "./utils/lang-state"
+import { toasts } from './utils/toast';
 let view: EditorView;
 let stdout = $state("Nothing");
 let stderr = $state("Nothing");
 let disabled = $state(false);
+let count = $state(0);
 onDestroy(() => {
   view.destroy();
 })
@@ -15,6 +22,7 @@ function onChange(e: CustomEvent){
   $langState.sampleDataLang[$langState.type][$langState.value] = e.detail
 }
 async function send(){
+  toasts.info("Waiting Response",1000)
   disabled = true
   const payload = {
     "txt": $langState.sampleDataLang[$langState.type][$langState.value] as string,
@@ -24,24 +32,33 @@ async function send(){
   let fetch = import("./utils/fetch"); 
   const res = await (await fetch).fetchApiPost<FetchData>(payload,"/") 
   if(res.statusCode == 200){
+    if(res.errout != "") {
+      toasts.warning("Something Went Wrong",1000)
+    }
+    if(res.out != ""){
+      toasts.success("Success Response",1000)
+    }
     disabled = false
     stdout = res.errout != "" ? "Nothing" : $langState.type == "stq" ? JSON.parse(res.out.trim()) : res.out
     stderr = res.errout == "" ? "Nothing" : res.errout
   }
-
 }
 function onChangeRadio(event: Event){
   $langState.value = (event.target as HTMLInputElement).value
+  count++
 }
 function onChangeType(event: Event){
   $langState.type = (event.target as HTMLInputElement).value
+  count++
 }
 </script>
 
 <main class="columns">
   <div class="column" style="margin:1rem;">
     <div style="margin-bottom:0.5rem;border-color:black; border-width: 2px;border-style: solid;">
-      <CodeMirror bind:value={$langState.sampleDataLang[$langState.type][$langState.value]} readonly={disabled} on:change={(e) => onChange(e)} on:ready={(e) => view = e.detail} lang={javascript()}/> 
+      {#key count}
+        <CodeMirror bind:value={$langState.sampleDataLang[$langState.type][$langState.value]} readonly={disabled} on:change={(e) => onChange(e)} on:ready={(e) => view = e.detail} lang={javascript()} extensions={[go(),php()]}/> 
+      {/key}
     </div> 
     <div>
         <button class="button is-light" disabled={disabled} onclick={send} type="button">Send</button> 
@@ -80,7 +97,7 @@ function onChangeType(event: Event){
       Simple Test Question : change integer to string <br />
       Result <br />
       <blockquote>
-        <input type="checkbox" value="stq1" checked={!stdout} /> Check change after int to string <br />
+        <input type="checkbox" value="stq1" checked={!stdout} disabled /> Check change after int to string <br />
       </blockquote>
     {/if}
     </div>
@@ -91,3 +108,4 @@ function onChangeType(event: Event){
   </div>
 </main>
 
+<Toaster />
