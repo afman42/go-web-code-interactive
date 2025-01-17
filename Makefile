@@ -6,6 +6,11 @@ run/web:
 
 run/preview_linux: build/linux build/web-staging preview/api_linux
 
+build/rmfldr:
+	@echo "Remove Folder";
+	rm -rf ./bin/;
+	@echo "Finish Remove Folder";
+
 build/linux:
 	@echo "Build Binary Linux"
 	GOOS=linux GOARCH=amd64 go build -ldflags="-s" -o=./bin/linux_amd64/tmp/app main.go 
@@ -32,7 +37,7 @@ preview/api_linux:
 	@echo "Preview";
 	./bin/linux_amd64/tmp/app -mode preview;
 
-build: build/linux build/windows build/compress build/web
+build: build/rmfldr build/linux build/windows build/compress build/web
 
 deploy:
 	caprover deploy -t deploy.tar;
