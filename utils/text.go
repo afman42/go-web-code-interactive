@@ -35,5 +35,11 @@ function main($f){
   }
   return $data ? "true" : "false";
 }
-echo main(intIntoString(1));
+try {
+  echo main(intIntoString(1));
+}
+//catch exception
+catch(Exception $e) {
+  echo 'Message: ' .$e->getMessage();
+}
 `
