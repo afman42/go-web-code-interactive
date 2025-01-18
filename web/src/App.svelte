@@ -59,9 +59,9 @@ function onChangeType(event: Event){
 
 <div class="grid grid-cols-2 gap-4 md:max-xl:flex-col md:max-xl:flex sm:max-xl:flex sm:max-xl:flex-col min-sm:max-xl:flex min-sm:max-xl:flex-col">
   <div class="flex flex-col" style="margin:1rem;">
-    <div class="flex" style="margin-bottom:0.5rem;border-color:black; border-width: 2px;border-style: solid;">
+    <div class="flex" style="width:100%;margin-bottom:0.5rem;border-color:black; border-width: 2px;border-style: solid;">
       {#key count}
-        <CodeMirror bind:value={$langState.sampleDataLang[$langState.type][$langState.value]} readonly={disabled} on:change={(e) => onChange(e)} on:ready={(e) => view = e.detail} lang={javascript()} extensions={[go(),php()]}/> 
+        <CodeMirror class="w-full" bind:value={$langState.sampleDataLang[$langState.type][$langState.value]} readonly={disabled} on:change={(e) => onChange(e)} on:ready={(e) => view = e.detail} lang={javascript()} extensions={[go(),php()]}/> 
       {/key}
     </div> 
     <div class="flex items-center min-sm:max-xl:flex min-sm:max-xl:flex-col">
