@@ -33,9 +33,13 @@ build/web-staging:
 	cd ./web/; npm run build:staging;
 	@echo "Build Dist Web Staging Done";
 
-preview/api_linux:
-	@echo "Preview";
-	./bin/linux_amd64/tmp/app -mode preview;
+
+build/compress:
+	@echo "Start Compress file";
+	./upx ./bin/linux_amd64/tmp/app -o  ./bin/linux_amd64/app;
+	./upx ./bin/windows_amd64/tmp/app -o ./bin/windows_amd64/app;
+	@echo "Finish Compress file";
+
 
 build: build/rmfldr build/linux build/windows build/compress build/web
 
@@ -52,9 +56,13 @@ npm-install:
 	read -p "Install lib on package.json: " lib;
 	cd web/; npm i $$lib;
 	@echo "install Package Web done";
-	
-build/compress:
-	@echo "Start Compress file";
-	./upx ./bin/linux_amd64/tmp/app -o  ./bin/linux_amd64/app;
-	./upx ./bin/windows_amd64/tmp/app -o ./bin/windows_amd64/app;
-	@echo "Finish Compress file";
+
+npm-uni:
+	@echo "Uninstall Package Web";
+	read -p "uninstall lib on package.json: " lib;
+	cd web/; npm uninstall $$lib;
+	@echo "uninstall Package Web done";
+
+preview/api_linux:
+	@echo "Preview";
+	./bin/linux_amd64/tmp/app -mode preview;
