@@ -33,8 +33,8 @@ async function send(){
   const res = await (await fetch).fetchApiPost<FetchData>(payload,"/") 
   if(res.statusCode == 200){
     disabled = false
-    stdout = res.errout != "" ? "Nothing" : $langState.type == "stq" ? JSON.parse(res.out.trim()) : res.out
     stderr = res.errout == "" ? "Nothing" : res.errout
+    stdout = res.errout != "" ? "Nothing" : $langState.type == "stq" ? JSON.parse(res.out.trim())  : res.out
     if(stderr != "Nothing") {
       toasts.warning("Something Went Wrong",1000)
     }
