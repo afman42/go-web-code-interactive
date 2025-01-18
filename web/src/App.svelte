@@ -57,59 +57,51 @@ function onChangeType(event: Event){
 }
 </script>
 
-<main class="columns">
-  <div class="column" style="margin:1rem;">
-    <div style="margin-bottom:0.5rem;border-color:black; border-width: 2px;border-style: solid;">
+<div class="grid grid-cols-2 gap-4 md:max-xl:flex-col md:max-xl:flex sm:max-xl:flex sm:max-xl:flex-col min-sm:max-xl:flex min-sm:max-xl:flex-col">
+  <div class="flex flex-col" style="margin:1rem;">
+    <div class="flex" style="margin-bottom:0.5rem;border-color:black; border-width: 2px;border-style: solid;">
       {#key count}
         <CodeMirror bind:value={$langState.sampleDataLang[$langState.type][$langState.value]} readonly={disabled} on:change={(e) => onChange(e)} on:ready={(e) => view = e.detail} lang={javascript()} extensions={[go(),php()]}/> 
       {/key}
     </div> 
-    <div>
-        <button class="button is-light" disabled={disabled} onclick={send} type="button">Send</button> 
-        <label class="radio">
-        <input type="radio" value="node" onchange={onChangeRadio} checked={$langState.value == "node"}/>
-          Node
-        </label>
-        <label class="radio">
-          <input type="radio" value="php" onchange={onChangeRadio} checked={$langState.value == "php"} />
-          PHP
-        </label>
-        <label class="radio">
-          <input type="radio" value="go" onchange={onChangeRadio} checked={$langState.value == "go"} />
-          Go
-        </label>
-        <label class="radio"> || </label>
-        <label class="radio">
-          <input type="radio" value="repl" onchange={onChangeType} checked={$langState.type == "repl"} />
-          REPL
-        </label>
-        <label class="radio">
-          <input type="radio" value="stq" onchange={onChangeType} checked={$langState.type == "stq"} />
-          Simple Test Question
-        </label>
+    <div class="flex items-center min-sm:max-xl:flex min-sm:max-xl:flex-col">
+        <button class="bg-red-500 flex py-2.5 px-3 text-white rounded-lg mr-1" disabled={disabled} onclick={send} type="button">Send</button> 
+        <div class="flex gap-1">
+          <div class="flex gap-1">
+          <input type="radio" value="node" onchange={onChangeRadio} checked={$langState.value == "node"}/>
+            Node
+            <input type="radio" value="php" onchange={onChangeRadio} checked={$langState.value == "php"} />
+            PHP
+            <input type="radio" value="go" onchange={onChangeRadio} checked={$langState.value == "go"} />
+            Go
+          <label class="flex"> || </label>
+            <input type="radio" value="repl" onchange={onChangeType} checked={$langState.type == "repl"} />
+            REPL
+            <input type="radio" value="stq" onchange={onChangeType} checked={$langState.type == "stq"} />
+            Simple Test Question
+          </div>
+        </div>
       </div>
     </div>
 
-  <div class="column">
-    <div class="column content">
+  <div class="flex flex-col md:max-xl:ml-4 sm:max-xl:ml-4 min-sm:max-xl:ml-4">
+    <div class="flex mt-3 flex-col">
 
     {#if $langState.type == "repl"}
-      StdOut <br />
-      <blockquote>{stdout}</blockquote>
+      <h6>StdOut</h6>
+      <blockquote class="border-l-4 border-gray-500 my-2 py-4 pl-4">{stdout}</blockquote>
     {/if}
     {#if $langState.type == "stq"}
-      Simple Test Question : change integer to string <br />
-      Result <br />
-      <blockquote>
-        <input type="checkbox" value="stq1" checked={!stdout} disabled /> Check change after int to string <br />
+      <h6>Simple Test Question : change integer to string</h6>
+      <h6>Result</h6>
+      <blockquote class="flex gap-1 flex-start border-l-4 border-gray-500 my-2 py-4 pl-4">
+        <input type="checkbox" value="stq1" checked={!stdout} disabled /> Check change after int to string
       </blockquote>
     {/if}
-    </div>
-    <div class="column content">
-      StdErr <br />
-      <blockquote>{stderr}</blockquote>
+      <h6>StdErr</h6>
+      <blockquote  class="border-l-4 border-gray-500 my-2 py-4 pl-4">{stderr}</blockquote>
     </div>
   </div>
-</main>
+</div>
 
 <Toaster />
