@@ -39,6 +39,7 @@ Sama seperti ada di CodeWars,LeetCode,dll
 - [x] File Docker dan Masukin Web
 - [x] Log all routes di web
 - [x] Make Web Responsive mobile and dekstop
+- [] Need change code editor like vscode 
 
 ![IMG_PROD](images/WEB.PNG "Title")
 
