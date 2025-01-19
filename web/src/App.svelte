@@ -67,18 +67,21 @@ function onChangeType(event: Event){
     <div class="flex items-center min-sm:max-xl:flex min-sm:max-xl:flex-col">
         <button class="bg-red-500 flex py-2.5 px-3 text-white rounded-lg mr-1" disabled={disabled} onclick={send} type="button">Send</button> 
         <div class="flex gap-1">
-          <div class="flex gap-1">
-          <input type="radio" value="node" onchange={onChangeRadio} checked={$langState.value == "node"}/>
-            Node
-            <input type="radio" value="php" onchange={onChangeRadio} checked={$langState.value == "php"} />
-            PHP
-            <input type="radio" value="go" onchange={onChangeRadio} checked={$langState.value == "go"} />
-            Go
-          <label class="flex"> || </label>
-            <input type="radio" value="repl" onchange={onChangeType} checked={$langState.type == "repl"} />
-            REPL
-            <input type="radio" value="stq" onchange={onChangeType} checked={$langState.type == "stq"} />
-            Simple Test Question
+          <div class="flex gap-1 min-sm:max-xl:flex min-sm:max-xl:items-center min-sm:max-xl:gap-1">
+          <label for="node" class="min-sm:max-xl:text-sm min-sm:max-xl:flex min-sm:max-xl:gap-1">
+            <input type="radio" value="node" onchange={onChangeRadio} checked={$langState.value == "node"}/>Node
+            </label>
+          <label for="php" class="min-sm:max-xl:text-xs min-sm:max-xl:flex min-sm:max-xl:gap-1">
+            <input type="radio" value="php" onchange={onChangeRadio} checked={$langState.value == "php"} />PHP
+          </label>
+          <label for="go" class="min-sm:max-xl:text-xs min-sm:max-xl:flex min-sm:max-xl:gap-1">
+          <input type="radio" value="go" onchange={onChangeRadio} checked={$langState.value == "go"} />Go</label>
+          <b> || </b>
+          <label for="repl" class="min-sm:max-xl:text-xs min-sm:max-xl:flex min-sm:max-xl:gap-1">
+            <input type="radio" value="repl" onchange={onChangeType} checked={$langState.type == "repl"} />REPL
+          </label>
+          <label for="stq" class="min-sm:max-xl:text-xs min-sm:max-xl:flex min-sm:max-xl:gap-1">
+            <input type="radio" value="stq" onchange={onChangeType} checked={$langState.type == "stq"} />Simple Test Question
           </div>
         </div>
       </div>
@@ -88,18 +91,18 @@ function onChangeType(event: Event){
     <div class="flex mt-3 flex-col">
 
     {#if $langState.type == "repl"}
-      <h6>StdOut</h6>
-      <blockquote class="border-l-4 border-gray-500 my-2 py-4 pl-4">{stdout}</blockquote>
+      <h6 class="min-sm:max-xl:text-sm">StdOut</h6>
+      <blockquote class="min-sm:max-xl:text-sm border-l-4 border-gray-500 my-2 py-4 pl-4">{stdout}</blockquote>
     {/if}
     {#if $langState.type == "stq"}
-      <h6>Simple Test Question : change integer to string</h6>
-      <h6>Result</h6>
-      <blockquote class="flex gap-1 flex-start border-l-4 border-gray-500 my-2 py-4 pl-4">
+      <h6 class="min-sm:max-xl:text-sm">Simple Test Question : change integer to string</h6>
+      <h6 class="min-sm:max-xl:text-sm">Result</h6>
+      <blockquote class="flex gap-1 min-sm:max-xl:text-sm flex-start border-l-4 border-gray-500 my-2 py-4 pl-4">
         <input type="checkbox" value="stq1" checked={!stdout} disabled /> Check change after int to string
       </blockquote>
     {/if}
-      <h6>StdErr</h6>
-      <blockquote  class="border-l-4 border-gray-500 my-2 py-4 pl-4">{stderr}</blockquote>
+      <h6 class="min-sm:max-xl:text-sm">StdErr</h6>
+      <blockquote  class="border-l-4 min-sm:max-xl:text-sm border-gray-500 my-2 py-4 pl-4">{stderr}</blockquote>
     </div>
   </div>
 </div>
