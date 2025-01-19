@@ -26,7 +26,7 @@ Sama seperti ada di CodeWars,LeetCode,dll
 - buat file `.env.prod` di golang dan file `.env.production` di web
 - buat variabel `export` di cmd `deploy:` di `.bashrc` lalu `source path/.bashrc` di linux
 - windows `not testing`
-- Menjalankan ``
+- Menjalankan `make deploy/prod`
 
 ### Kendala
 
