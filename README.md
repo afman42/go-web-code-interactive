@@ -44,4 +44,4 @@ Sama seperti ada di CodeWars,LeetCode,dll
 
 ![IMG_PROD](images/IMG_PROD.PNG "Title")
 
-![IMG_PROD](images/after-prod-img.png "Title")
+![IMG_PROD](images/after-prod-img.jpg "Title")
