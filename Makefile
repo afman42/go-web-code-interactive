@@ -50,6 +50,8 @@ deploy/tar:
 	rm -f deploy.tar;
 	tar -zcvf deploy.tar ./bin/linux_amd64/app ./web/dist/ Dockerfile captain-definition .env.prod;
 
+deploy/prod: build deploy/tar deploy
+
 .ONESHELL:
 npm-install:
 	@echo "Install Package Web";
