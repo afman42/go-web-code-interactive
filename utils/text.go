@@ -9,9 +9,9 @@ func main(){
   _, err := strconv.Atoi(f)
   if err != nil{
     fmt.Println(err)
+    data = false
   } 
 
-  data = false
   fmt.Println(data)
 }
 `
