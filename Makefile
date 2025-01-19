@@ -44,7 +44,7 @@ build/compress:
 build: build/rmfldr build/linux build/windows build/compress build/web
 
 deploy:
-	caprover deploy -t deploy.tar;
+	caprover deploy -h $$CAPROVER_HOST -p $$CAPROVER_PASSWORD -t deploy.tar -a $$CAPROVER_APP_NAME -n $$CAPROVER_MACHINE_NAME;
 
 deploy/tar:
 	rm -f deploy.tar;

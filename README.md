@@ -24,7 +24,9 @@ Sama seperti ada di CodeWars,LeetCode,dll
 ### Production
 
 - buat file `.env.prod` di golang dan file `.env.production` di web
-- Menjalankan `make build && make deploy/tar && make deploy`
+- buat variabel `export` di cmd `deploy:` di `.bashrc` lalu `source path/.bashrc` di linux
+- windows `not testing`
+- Menjalankan ``
 
 ### Kendala
 
@@ -39,7 +41,7 @@ Sama seperti ada di CodeWars,LeetCode,dll
 - [x] File Docker dan Masukin Web
 - [x] Log all routes di web
 - [x] Make Web Responsive mobile and dekstop
-- [] Need change code editor like vscode 
+- [] Need change code editor like vscode
 
 ![IMG_PROD](images/WEB.PNG "Title")
 
