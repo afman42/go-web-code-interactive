@@ -65,7 +65,7 @@ function onChangeType(event: Event){
       {/key}
     </div> 
     <div class="flex items-center md:flex md:items-center sm:flex sm:items-center min-sm:flex min-sm:flex-col">
-        <button class="bg-red-500 flex py-2.5 px-3 min-sm:h-3 min-sm:w-full md:px-1 md:py-2 md:text-sm min-sm:text-xs min-sm:items-center min-sm:justify-center text-white rounded-lg mr-1" disabled={disabled} onclick={send} type="button">Send</button> 
+        <button class="bg-red-500 flex py-2.5 px-3 min-sm:h-8 min-sm:hover:bg-white min-sm:hover:border-2 min-sm:hover:text-black min-sm:hover:border-red-500 min-sm:w-full md:px-1 md:py-2 md:text-sm min-sm:text-xs min-sm:items-center min-sm:justify-center text-white rounded-lg mr-1" disabled={disabled} onclick={send} type="button">Send</button> 
         <div class="flex gap-1 min-sm:justify-between">
           <div class="flex gap-2 md:flex md:items-center sm:flex sm:items-center sm:gap-1 min-sm:flex min-sm:items-center min-sm:gap-1">
           <label for="node" class="min-sm:text-sm min-sm:flex min-sm:gap-1 md:text-sm">
