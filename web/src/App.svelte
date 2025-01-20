@@ -5,9 +5,9 @@ import Toaster from "./component/Toaster.svelte"
 import CodeMirror from "svelte-codemirror-editor";
 import type { EditorView } from "@codemirror/view";
 import { onDestroy} from "svelte";
-import { javascript} from "@codemirror/lang-javascript"
+import { javascript } from "@codemirror/lang-javascript"
 import { go } from "@codemirror/lang-go"
-import { php } from "@codemirror/lang-php"
+import { php, phpLanguage } from "@codemirror/lang-php"
 import { langState } from "./utils/lang-state"
 import { toasts } from './utils/toast';
 let view: EditorView;
@@ -47,7 +47,7 @@ function onChangeRadio(event: Event){
   $langState.value = (event.target as HTMLInputElement).value
   count++
   stdout = "Nothing"
-  stderr = "Nothing"
+  stderr = "Nothing" 
 }
 function onChangeType(event: Event){
   $langState.type = (event.target as HTMLInputElement).value
@@ -61,7 +61,7 @@ function onChangeType(event: Event){
   <div class="flex flex-col m-4">
     <div class="flex" style="width:100%;margin-bottom:0.5rem;border-color:black; border-width: 2px;border-style: solid;">
       {#key count}
-        <CodeMirror class="w-full" bind:value={$langState.sampleDataLang[$langState.type][$langState.value]} readonly={disabled} on:change={(e) => onChange(e)} on:ready={(e) => view = e.detail} lang={javascript()} extensions={[go(),php()]}/> 
+        <CodeMirror class="w-full" bind:value={$langState.sampleDataLang[$langState.type][$langState.value]} readonly={disabled} on:change={(e) => onChange(e)} on:ready={(e) => view = e.detail} lang={javascript()} extensions={[go(),php({ baseLanguage: phpLanguage})]}/> 
       {/key}
     </div> 
     <div class="flex items-center md:flex md:items-center sm:flex sm:items-center min-sm:flex min-sm:flex-col">
