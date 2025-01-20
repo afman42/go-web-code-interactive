@@ -9,9 +9,9 @@ func main(){
   _, err := strconv.Atoi(f)
   if err != nil{
     fmt.Println(err)
-    data = false
   } 
 
+  data = false
   fmt.Println(data)
 }
 `
@@ -35,11 +35,14 @@ function main($f){
   }
   return $data ? "true" : "false";
 }
-try {
-  echo main(intIntoString(1));
-}
-//catch exception
-catch(Exception $e) {
-  echo 'Message: ' .$e->getMessage();
-}
+echo main(intIntoString(1));
 `
+
+// Todo
+// try {
+//   echo main(intIntoString(1));
+// }
+// //catch exception
+// catch(Exception $e) {
+//   echo 'Message: ' .$e->getMessage();
+// }
