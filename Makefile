@@ -16,6 +16,11 @@ build/linux:
 	GOOS=linux GOARCH=amd64 go build -ldflags="-s" -o=./bin/linux_amd64/tmp/app main.go 
 	@echo "Build Done"
 
+build/alpine_linux:
+	@echo "Build Binary Linux"
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s" -o=./bin/linux_amd64/tmp/app main.go 
+	@echo "Build Done"
+
 build/windows:
 	@echo "Build Binary Windows"
 	GOOS=windows GOARCH=amd64 go build -ldflags="-s" -o=./bin/windows_amd64/tmp/app main.go 
@@ -34,14 +39,19 @@ build/web-staging:
 	@echo "Build Dist Web Staging Done";
 
 
-build/compress:
-	@echo "Start Compress file";
+build/compress_linux:
+	@echo "Start Compress file linux";
 	./upx ./bin/linux_amd64/tmp/app -o  ./bin/linux_amd64/app;
+	@echo "Finish Compress file linux";
+
+build/compress_windows:
+	@echo "Start Compress file Windows";
 	./upx ./bin/windows_amd64/tmp/app -o ./bin/windows_amd64/app;
-	@echo "Finish Compress file";
+	@echo "Finish Compress file Windows";
 
+build: build/rmfldr build/linux build/windows build/compress_linux build/compress_windows build/web
 
-build: build/rmfldr build/linux build/windows build/compress build/web
+build_alpine: build/rmfldr build/alpine_linux build/compress_linux build/web
 
 deploy:
 	caprover deploy -h $$CAPROVER_HOST -p $$CAPROVER_PASSWORD -t deploy.tar -a $$CAPROVER_APP_NAME -n $$CAPROVER_MACHINE_NAME;
@@ -49,6 +59,13 @@ deploy:
 deploy/tar:
 	rm -f deploy.tar;
 	tar -zcvf deploy.tar ./bin/linux_amd64/app ./web/dist/ Dockerfile captain-definition .env.prod;
+
+deploy/tar_alpine:
+	# Set Up file captain-definition
+	rm -f deploy.tar;
+	tar -zcvf deploy.tar ./bin/linux_amd64/app ./web/dist/ Dockerfile-alpine captain-definition .env.prod;
+
+deploy/prod_alpine: build_alpine deploy/tar_alpine deploy
 
 deploy/prod: build deploy/tar deploy
 
