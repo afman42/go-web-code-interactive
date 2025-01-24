@@ -1,3 +1,5 @@
+.ONESHELL:
+
 run/api:
 	go run main.go
 
@@ -12,14 +14,15 @@ build/rmfldr:
 	@echo "Finish Remove Folder";
 
 build/linux:
-	@echo "Build Binary Linux"
-	GOOS=linux GOARCH=amd64 go build -ldflags="-s" -o=./bin/linux_amd64/tmp/app main.go 
-	@echo "Build Done"
-
-build/alpine_linux:
-	@echo "Build Binary Linux"
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s" -o=./bin/linux_amd64/tmp/app main.go 
-	@echo "Build Done"
+	@if [ $$l = "alpine" ]; then
+		@echo "Build Binary $l linux";
+		CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s" -o=./bin/linux_amd64/tmp/app main.go
+		@echo "Build Binary $l Done";
+		return
+	fi
+	@echo "Build Binary linux";
+	GOOS=linux GOARCH=amd64 go build -ldflags="-s" -o=./bin/linux_amd64/tmp/app main.go;
+	@echo "Build Binary Done";
 
 build/windows:
 	@echo "Build Binary Windows"
@@ -38,7 +41,6 @@ build/web-staging:
 	cd ./web/; npm run build:staging;
 	@echo "Build Dist Web Staging Done";
 
-
 build/compress_linux:
 	@echo "Start Compress file linux";
 	./upx ./bin/linux_amd64/tmp/app -o  ./bin/linux_amd64/app;
@@ -49,9 +51,19 @@ build/compress_windows:
 	./upx ./bin/windows_amd64/tmp/app -o ./bin/windows_amd64/app;
 	@echo "Finish Compress file Windows";
 
-build: build/rmfldr build/linux build/windows build/compress_linux build/compress_windows build/web
+build: 
+	@make build/rmfldr; 
+	@make build/linux l="etc";
+	@make build/windows; 
+	@make build/compress_linux; 
+	@make build/compress_windows; 
+	@make build/web;
 
-build_alpine: build/rmfldr build/alpine_linux build/compress_linux build/web
+build_alpine: 
+	@make build/rmfldr; 
+	@make build/linux l="alpine"; 
+	@make build/compress_linux; 
+	@make build/web;
 
 deploy:
 	caprover deploy -h $$CAPROVER_HOST -p $$CAPROVER_PASSWORD -t deploy.tar -a $$CAPROVER_APP_NAME -n $$CAPROVER_MACHINE_NAME;
@@ -70,7 +82,6 @@ deploy/prod_alpine: build_alpine deploy/tar_alpine deploy
 
 deploy/prod: build deploy/tar deploy
 
-.ONESHELL:
 npm-install:
 	@echo "Install Package Web";
 	read -p "Install lib on package.json: " lib;
