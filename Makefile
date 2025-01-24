@@ -85,7 +85,7 @@ deploy/prod_alpine: build_alpine deploy/tar_alpine deploy
 
 deploy/prod: build deploy/tar deploy
 
-# make npm-uni i="lib lib"
+# make npmi i="lib lib"
 npmi:
 	@echo "install package web";
 	@cd web/; 
