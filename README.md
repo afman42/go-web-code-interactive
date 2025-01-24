@@ -26,7 +26,7 @@ Sama seperti ada di CodeWars,LeetCode,dll
 - buat file `.env.prod` di golang dan file `.env.production` di web
 - buat variabel `export` di cmd `deploy:` di `.bashrc` lalu `source path/.bashrc` di linux
 - windows `not testing`
-- Menjalankan di os ubuntu `make deploy/prod` atau atur path `Dockerfile alpine` di `captain-definition` Menjalankan server di os alpine `make deploy/prod_alpine`
+- Menjalankan di os ubuntu `make deploy/prod` atau Menjalankan server di os alpine `make deploy/prod_alpine`
 
 ### Kendala
 
