@@ -15,6 +15,8 @@ Sama seperti ada di CodeWars,LeetCode,dll
 - Masuk root folder
 - Menjalankan Golang `make run/api`
 - Menjalankan Web `make run/web`
+- Install lib di package.json `make npmi i="lib lib"`
+- Uninstall lib di package.json `make npmu u="lib lib"`
 
 ### Preview Setelah Build
 

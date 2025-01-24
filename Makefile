@@ -6,7 +6,10 @@ run/api:
 run/web:
 	cd web/; npm run dev;
 
-run/preview_linux: build/linux build/web-staging preview/api_linux
+run/preview_linux: 
+	@make build/linux l="etc";
+	@make build/web-staging; 
+	@make preview/api_linux;
 
 build/rmfldr:
 	@echo "Remove Folder";
@@ -82,17 +85,19 @@ deploy/prod_alpine: build_alpine deploy/tar_alpine deploy
 
 deploy/prod: build deploy/tar deploy
 
-npm-install:
-	@echo "Install Package Web";
-	read -p "Install lib on package.json: " lib;
-	cd web/; npm i $$lib;
-	@echo "install Package Web done";
+# make npm-uni i="lib lib"
+npmi:
+	@echo "install package web";
+	@cd web/; 
+	@npm i $$i;
+	@echo "install Package web done: $i";
 
-npm-uni:
-	@echo "Uninstall Package Web";
-	read -p "uninstall lib on package.json: " lib
-	cd web/; npm uninstall $$lib;
-	@echo "uninstall Package Web done";
+# make npmu u="lib lib"
+npmu:
+	@echo "uninstall wackage web";
+	@cd web/; 
+	@npm uninstall $$u;
+	@echo "uninstall package web done: $u";
 
 preview/api_linux:
 	@echo "Preview";
