@@ -58,15 +58,13 @@ deploy:
 
 deploy/tar:
 	rm -f deploy.tar;
-	mv ubuntu-captain-definition captain-definition
 	tar -zcvf deploy.tar ./bin/linux_amd64/app ./web/dist/ Dockerfile captain-definition .env.prod;
-	mv captain-definition ubuntu-captain-definition
 
 deploy/tar_alpine:
 	rm -f deploy.tar;
-	mv alpine-captain-definition captain-definition
+	sed -i 's/Dockerfile/Dockerfile-alpine/g' ./captain-definition
 	tar -zcvf deploy.tar ./bin/linux_amd64/app ./web/dist/ Dockerfile-alpine captain-definition .env.prod;
-	mv captain-definition alpine-captain-definition
+	sed -i 's/Dockerfile-alpine/Dockerfile/g' ./captain-definition
 
 deploy/prod_alpine: build_alpine deploy/tar_alpine deploy
 
