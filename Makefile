@@ -58,12 +58,15 @@ deploy:
 
 deploy/tar:
 	rm -f deploy.tar;
+	mv ubuntu-captain-definition captain-definition
 	tar -zcvf deploy.tar ./bin/linux_amd64/app ./web/dist/ Dockerfile captain-definition .env.prod;
+	mv captain-definition ubuntu-captain-definition
 
 deploy/tar_alpine:
-	# Set Up file captain-definition
 	rm -f deploy.tar;
+	mv alpine-captain-definition captain-definition
 	tar -zcvf deploy.tar ./bin/linux_amd64/app ./web/dist/ Dockerfile-alpine captain-definition .env.prod;
+	mv captain-definition alpine-captain-definition
 
 deploy/prod_alpine: build_alpine deploy/tar_alpine deploy
 
@@ -78,7 +81,7 @@ npm-install:
 
 npm-uni:
 	@echo "Uninstall Package Web";
-	read -p "uninstall lib on package.json: " lib;
+	read -p "uninstall lib on package.json: " lib
 	cd web/; npm uninstall $$lib;
 	@echo "uninstall Package Web done";
 
