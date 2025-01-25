@@ -1,5 +1,4 @@
-import { writable } from "svelte/store";
-export let langState = writable({
+export let langState = $state({
   value: "node",
   sampleDataLang: {
     repl: {
