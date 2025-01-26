@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/afman42/go-web-code-interactive/utils"
 	"github.com/joho/godotenv"
@@ -127,8 +128,18 @@ func index(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if data.Language == "" {
-			data.Language = "node"
+		w.Header().Set("Content-Type", "application/json")
+		data.Txt = strings.TrimSpace(data.Txt)
+		if data.Language == "" || data.Txt == "" || data.Tipe == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(struct {
+				StatusCode int    `json:"statusCode"`
+				Message    string `json:"message"`
+			}{
+				StatusCode: http.StatusBadRequest,
+				Message:    "Something Went Wrong, Field Empty",
+			})
+			return
 		}
 		filename := "index-" + utils.StringWithCharset(5) + ".js"
 		if data.Language == "php" {
@@ -172,7 +183,6 @@ func index(w http.ResponseWriter, r *http.Request) {
 		data.Stdout = out
 		data.Stderr = errout
 		data.StatusCode = http.StatusOK
-		w.Header().Set("Content-Type", "application/json")
 		http.StatusText(http.StatusOK)
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data)
