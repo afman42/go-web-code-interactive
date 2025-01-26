@@ -9,7 +9,7 @@ export let langState = $state({
     stq: {
       node: "//Don't remove function intIntoString\n\nfunction intIntoString(n){\n\treturn\n}\n\n",
       php: "<?php\n//Don't remove function intIntoString\n\nfunction intIntoString($n){\n\treturn\n}\n\n",
-      go: 'package main\n\nimport "fmt" //Don"t remove fmt\n\n//Don"t remove function intIntoString\nfunc intIntoString(n int) string {\n\treturn\n}\n\n',
+      go: 'package main\n\nimport (\n\t"fmt" //Don"t remove fmt\n\t"strconv"\n)\n\n//Don"t remove function intIntoString\nfunc intIntoString(n int) string {\n\treturn\n}\n\n',
     },
   },
   type: "repl",
