@@ -130,6 +130,8 @@ func index(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		data.Txt = strings.TrimSpace(data.Txt)
+		data.Language = strings.TrimSpace(data.Language)
+		data.Tipe = strings.TrimSpace(data.Tipe)
 		if data.Language == "" || data.Txt == "" || data.Tipe == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(struct {
@@ -137,7 +139,29 @@ func index(w http.ResponseWriter, r *http.Request) {
 				Message    string `json:"message"`
 			}{
 				StatusCode: http.StatusBadRequest,
-				Message:    "Something Went Wrong, Field Empty",
+				Message:    "Something Went Wrong, Check Field Empty",
+			})
+			return
+		}
+		if !utils.CheckIsNotData([]string{"php", "node", "go"}, data.Language) {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(struct {
+				StatusCode int    `json:"statusCode"`
+				Message    string `json:"message"`
+			}{
+				StatusCode: http.StatusBadRequest,
+				Message:    "Something Went Wrong, Check Language is exist",
+			})
+			return
+		}
+		if !utils.CheckIsNotData([]string{"repl", "stq"}, data.Tipe) {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(struct {
+				StatusCode int    `json:"statusCode"`
+				Message    string `json:"message"`
+			}{
+				StatusCode: http.StatusBadRequest,
+				Message:    "Something Went Wrong, Check Type is exist",
 			})
 			return
 		}
