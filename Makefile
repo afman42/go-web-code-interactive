@@ -7,8 +7,9 @@ run/web:
 	cd web/; npm run dev;
 
 run/preview_linux: 
-	@make build/linux l="etc";
+	# Prevent error compile linux: pattern dist embed is not found
 	@make build/web-staging; 
+	@make build/linux l="etc";
 	@make preview/api_linux;
 
 build/rmfldr:
@@ -55,18 +56,20 @@ build/compress_windows:
 	@echo "Finish Compress file Windows";
 
 build: 
+	# Prevent error compile linux: pattern dist embed is not found
+	@make build/web;
 	@make build/rmfldr; 
 	@make build/linux l="etc";
 	@make build/windows; 
 	@make build/compress_linux; 
 	@make build/compress_windows; 
-	@make build/web;
 
 build_alpine: 
+	# Prevent error compile linux: pattern dist embed is not found
+	@make build/web;
 	@make build/rmfldr; 
 	@make build/linux l="alpine"; 
 	@make build/compress_linux; 
-	@make build/web;
 
 deploy:
 	caprover deploy -h $$CAPROVER_HOST -p $$CAPROVER_PASSWORD -t deploy.tar -a $$CAPROVER_APP_NAME -n $$CAPROVER_MACHINE_NAME;
