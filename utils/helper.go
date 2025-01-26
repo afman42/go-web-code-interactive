@@ -79,3 +79,12 @@ func PathFileTemp(filename string) string {
 	}
 	return filepath.Join(dir + filename)
 }
+
+func CheckIsNotData(slice []string, find string) bool {
+	for _, v := range slice {
+		if v == find {
+			return true
+		}
+	}
+	return false
+}
