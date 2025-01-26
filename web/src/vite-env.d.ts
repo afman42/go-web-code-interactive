@@ -5,4 +5,5 @@ interface FetchData {
   txt: string;
   out: string;
   errout: string;
+  statusCode: number;
 }
