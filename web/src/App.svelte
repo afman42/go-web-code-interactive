@@ -71,7 +71,7 @@ function onChangeType(event: Event){
 
 <div class="grid grid-cols-2 gap-4 sm:flex sm:flex-col min-sm:flex min-sm:flex-col">
   <div class="flex flex-col m-4">
-    <div class="flex" style="width:100%;margin-bottom:0.5rem;border-color:black; border-width: 2px;border-style: solid;">
+    <div class="flex w-full border-black border-2 border-solid mb-2">
       {#key count}
         <CodeMirror class="w-full" bind:value={langState.sampleDataLang[langState.type][langState.value]} readonly={disabled} on:change={(e) => onChange(e)} on:ready={(e) => view = e.detail} lang={javascript()} extensions={[go(),php({ baseLanguage: phpLanguage})]}/> 
       {/key}
