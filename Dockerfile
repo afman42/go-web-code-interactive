@@ -30,6 +30,7 @@ WORKDIR /app
 
 COPY ./bin/linux_amd64/app ./
 COPY ./web/dist ./web/dist
+COPY ./web/dist/vite.svg ./web/dist
 COPY .env.prod .env.prod
 
 EXPOSE 9001
