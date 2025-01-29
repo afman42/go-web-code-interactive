@@ -30,30 +30,31 @@ async function send(){
     "type": langState.type
   } as { [key: string]: string }
   let fetch = import("./utils/fetch"); 
-  await (await fetch).fetchApiPost<FetchData>(payload,"/")
-  .then((res) => {
-    disabled = false
-    stderr = res.errout.trim().length > 0 ? res.errout : "Nothing"
-    stdout = res.out.trim().length > 0 && stderr == "Nothing" ? res.out : "Nothing"
-    if(langState.type == "stq") {
+  try {
+  const res = await (await fetch).fetchApiPost<FetchData>(payload,"/")
+  if(res.statusCode == 200){
+      disabled = false
       stderr = res.errout.trim().length > 0 ? res.errout : "Nothing"
-      stdout = res.out.trim().length > 0 ? JSON.parse(res.out.trim()) : "Nothing"
+      stdout = res.out.trim().length > 0 && stderr == "Nothing" ? res.out : "Nothing"
+      if(langState.type == "stq") {
+        stderr = res.errout.trim().length > 0 ? res.errout : "Nothing"
+        stdout = res.out.trim().length > 0 ? JSON.parse(res.out.trim()) : "Nothing"
+      }
+      if(stderr != "Nothing") {
+        toasts.warning("Something Went Wrong",1000)
+      }
+      if(stdout != "Nothing" ){
+        toasts.success("Success Response",1000)
+      }
     }
-    if(stderr != "Nothing") {
-      toasts.warning("Something Went Wrong",1000)
-    }
-    if(stdout != "Nothing" ){
-      toasts.success("Success Response",1000)
-    }
-
-    // console.log({ stderr, stdout})
-  },(err)=> {
-    const parseMessage = JSON.parse(err)
+  } catch (error) {
+    //@ts-ignore
+    const parseMessage = JSON.parse(error)
     if(parseMessage.statusCode == 400) toasts.error(parseMessage.message,1000)
     disabled = false
     stdout = "Nothing"
     stderr = "Nothing" 
-  })
+  }
 }
 function onChangeRadio(event: Event){
   langState.value = (event.target as HTMLInputElement).value
