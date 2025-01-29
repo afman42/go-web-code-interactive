@@ -2,7 +2,6 @@
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
 	import { toasts } from '../utils/toast';
-
 	let themes = {
 		error: '#E26D69',
 		success: '#84C991',
@@ -12,45 +11,16 @@
 	const { state } = toasts;
 </script>
 
-<div class="notifications">
+<div class="fixed top-0 right-0 mx-auto p-0 z-50 left-4 flex flex-col justify-start items-center pointer-events-none">
 	{#each $state as toast (toast.id)}
 		<div
 			animate:flip
-			class="toast"
-			style="background: {themes[toast.type]};"
+			class="mb-2"
+			style="background: {themes[toast.type]};flex: '0 0 auto';"
 			transition:fly={{ y: 30 }}
 		>
-			<div class="content">{toast.message}</div>
+			<div class="p-3 block text-white font-medium text-xl min-sm:text-xs min-sm:font-normal sm:text-sm sm:font-normal">{toast.message}</div>
 		</div>
 	{/each}
 </div>
 
-<style>
-	.notifications {
-		position: fixed;
-		top: 0;
-		left: 10px;
-		right: 0;
-		margin: 0 auto;
-		padding: 0;
-		z-index: 9999;
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-start;
-		align-items: center;
-		pointer-events: none;
-	}
-
-	.toast {
-		flex: 0 0 auto;
-		margin-bottom: 10px;
-	}
-
-	.content {
-		padding: 10px;
-		display: block;
-		color: white;
-		font-weight: 500;
-    font-size: 20px;
-	}
-</style>
