@@ -11,8 +11,6 @@ export async function fetchApiPost<T>(
     },
   });
   if (response.ok) return await response.json();
-  else {
-    const errorMesssage: string = await response.text();
-    return Promise.reject(errorMesssage);
-  }
+  const errorMesssage: string = await response.text();
+  return Promise.reject(errorMesssage);
 }
