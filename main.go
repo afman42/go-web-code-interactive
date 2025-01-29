@@ -77,6 +77,17 @@ func main() {
 	mux.Handle("/", handler)
 	if Mode == ModePreview || Mode == ModeProd {
 		mux.Handle("/assets/", http.FileServer(http.FS(dist)))
+		// Static Folder web/public
+		mux.Handle("/vite.svg", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data, err := WebContent.ReadFile("web/dist/vite.svg")
+			if err != nil {
+				http.Error(w, "File not found", http.StatusNotFound)
+				return
+			}
+			w.Header().Set("Content-Type", "image/svg+xml")
+			w.WriteHeader(http.StatusOK)
+			w.Write(data)
+		}))
 	}
 	fmt.Println("Server starting in localhost:" + Port)
 	err = http.ListenAndServe(":"+Port, mux)
