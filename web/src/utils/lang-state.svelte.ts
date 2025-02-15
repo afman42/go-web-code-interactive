@@ -13,4 +13,8 @@ export let langState = $state({
     },
   },
   type: "repl",
-});
+}) as {
+  value: string;
+  sampleDataLang: Record<string, Record<string, string>>;
+  type: string;
+};

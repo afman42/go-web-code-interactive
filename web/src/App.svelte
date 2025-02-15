@@ -31,25 +31,24 @@ async function send(){
   } as { [key: string]: string }
   let fetch = import("./utils/fetch"); 
   try {
-  const res = await (await fetch).fetchApiPost<FetchData>(payload,"/")
-  if(res.statusCode == 200){
-      disabled = false
-      stderr = res.errout.trim().length > 0 ? res.errout : "Nothing"
-      stdout = res.out.trim().length > 0 && stderr == "Nothing" ? res.out : "Nothing"
-      if(langState.type == "stq") {
+    const res = await (await fetch).fetchApiPost<FetchData>(payload,"/")
+    if(res.statusCode == 200){
+        disabled = false
         stderr = res.errout.trim().length > 0 ? res.errout : "Nothing"
-        stdout = res.out.trim().length > 0 ? JSON.parse(res.out.trim()) : "Nothing"
+        stdout = res.out.trim().length > 0 && stderr == "Nothing" ? res.out : "Nothing"
+        if(langState.type == "stq") {
+          stderr = res.errout.trim().length > 0 ? res.errout : "Nothing"
+          stdout = res.out.trim().length > 0 ? JSON.parse(res.out.trim()) : "Nothing"
+        }
+        if(stderr != "Nothing") {
+          toasts.warning("Something Went Wrong",1000)
+        }
+        if(stdout != "Nothing" ){
+          toasts.success("Success Response",1000)
+        }
       }
-      if(stderr != "Nothing") {
-        toasts.warning("Something Went Wrong",1000)
-      }
-      if(stdout != "Nothing" ){
-        toasts.success("Success Response",1000)
-      }
-    }
-  } catch (error) {
-    //@ts-ignore
-    const parseMessage = JSON.parse(error)
+  } catch (error: unknown) {
+    const parseMessage = JSON.parse(error as string)
     if(parseMessage.statusCode == 400) toasts.error(parseMessage.message,1000)
     disabled = false
     stdout = "Nothing"
@@ -115,7 +114,7 @@ function onChangeType(event: Event){
       </blockquote>
     {/if}
       <h6 class="min-sm:text-sm md:text-sm">StdErr</h6>
-      <blockquote  class="border-l-4 md:text-sm min-sm:text-sm border-gray-500 my-2 py-4 pl-4">{stderr}</blockquote>
+      <blockquote class="border-l-4 md:text-sm min-sm:text-sm border-gray-500 my-2 py-4 pl-4">{stderr}</blockquote>
     </div>
   </div>
 </div>

@@ -1,6 +1,6 @@
 //https://github.com/afman42/simple-image-uploader-sveltekit/blob/main/src/lib/store/state.ts
 import { writable, derived } from "svelte/store";
-type IToast = {
+export type IToast = {
   message: string;
   type: TToastStatus;
   id: number;
@@ -45,7 +45,7 @@ function storeToast() {
   const { subscribe } = toasts;
 
   return {
-    state: toasts,
+    stateToast: toasts,
     subscribe,
     send,
     error: (msg: string, timeout: number) => send(msg, "error", timeout),
@@ -54,5 +54,4 @@ function storeToast() {
     info: (msg: string, timeout: number) => send(msg, "info", timeout),
   };
 }
-
 export const toasts = storeToast();
