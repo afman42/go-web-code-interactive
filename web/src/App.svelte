@@ -9,12 +9,13 @@ import { javascript } from "@codemirror/lang-javascript"
 import { go } from "@codemirror/lang-go"
 import { php, phpLanguage } from "@codemirror/lang-php"
 import { langState } from "./utils/lang-state.svelte"
-import { toasts } from './utils/toast';
+import { useToast } from './utils/toast.svelte';
 let view: EditorView;
 let stdout = $state("Nothing");
 let stderr = $state("Nothing");
 let disabled = $state(false);
 let count = $state(0);
+const toast = useToast()
 onDestroy(() => {
   view.destroy();
 })
@@ -22,7 +23,7 @@ function onChange(e: CustomEvent){
   langState.sampleDataLang[langState.type][langState.value] = e.detail
 }
 async function send(){
-  toasts.info("Waiting Response",1000)
+  toast.info("Waiting Response",3000)
   disabled = true
   const payload = {
     "txt": langState.sampleDataLang[langState.type][langState.value],
@@ -41,15 +42,15 @@ async function send(){
           stdout = res.out.trim().length > 0 ? JSON.parse(res.out.trim()) : "Nothing"
         }
         if(stderr != "Nothing") {
-          toasts.warning("Something Went Wrong",1000)
+          toast.warning("Something Went Wrong",1000)
         }
         if(stdout != "Nothing" ){
-          toasts.success("Success Response",1000)
+          toast.success("Success Response",1000)
         }
       }
   } catch (error: unknown) {
     const parseMessage = JSON.parse(error as string)
-    if(parseMessage.statusCode == 400) toasts.error(parseMessage.message,1000)
+    if(parseMessage.statusCode == 400) toast.error(parseMessage.message,1000)
     disabled = false
     stdout = "Nothing"
     stderr = "Nothing" 
