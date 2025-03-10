@@ -1,6 +1,6 @@
 <script lang="ts">
 //Component
-import Toaster from "./component/Toaster.svelte"
+import ToasterContainer from "./component/ToasterContainer.svelte"
 //Lib
 import CodeMirror from "svelte-codemirror-editor";
 import type { EditorView } from "@codemirror/view";
@@ -120,4 +120,4 @@ function onChangeType(event: Event){
   </div>
 </div>
 
-<Toaster />
+<ToasterContainer />
