@@ -4,6 +4,8 @@ type IToast = {
   id: number;
   timeout: number;
 };
+
+export type IToastIDX = IToast & { idx: number };
 type TToastStatus = "success" | "warning" | "error" | "info";
 
 let _toasts = $state<IToast[]>([]);
@@ -28,17 +30,6 @@ const success = (msg: string, timeout: number) => send(msg, "success", timeout);
 const info = (msg: string, timeout: number) => send(msg, "info", timeout);
 
 export const useToast = () => {
-  $effect(() => {
-    if (_toasts.length > 0) {
-      const timer = setTimeout(() => {
-        //Remove first
-        _toasts.shift();
-      }, _toasts[0].timeout);
-      return () => {
-        clearTimeout(timer);
-      };
-    }
-  });
   return {
     state: _toasts,
     error,
