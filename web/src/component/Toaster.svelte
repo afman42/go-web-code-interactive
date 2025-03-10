@@ -1,26 +1,32 @@
 <script lang="ts">
-	import { flip } from 'svelte/animate';
-	import { fly } from 'svelte/transition';
-	import { useToast } from '../utils/toast.svelte';
+  import { fade,slide } from 'svelte/transition';
+	import { useToast, type IToastIDX } from '../utils/toast.svelte';
+  let propToast: IToastIDX = $props()
   let themes = {
 		error: '#E26D69',
 		success: '#84C991',
 		warning: '#f0ad4e',
 		info: '#5bc0de'
 	};
-  const { state } = useToast()
+  const t = useToast()
+  $effect(() => {
+    if (t.state.length > 0) {
+      const timer = setTimeout(() => {
+        //Remove current idx
+        t.state.splice(propToast.idx,1)
+      }, t.state[propToast.idx].timeout);
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  });
 </script>
 
-<div class="fixed top-0 right-0 mx-auto p-0 z-50 left-4 flex flex-col justify-start items-center pointer-events-none">
-	{#each state as toast (toast.id)}
-		<div
-			animate:flip
-			class="mb-2"
-			style="background: {themes[toast.type]};flex: '0 0 auto';"
-			transition:fly={{ y: 30 }}
-		>
-			<div class="p-3 block text-white font-medium text-xl min-sm:text-xs min-sm:font-normal sm:text-sm sm:font-normal">{toast.message}</div>
-		</div>
-	{/each}
+<div
+  in:fade
+  class="mb-2"
+  style="background: {themes[propToast.type]};flex: '0 0 auto';"
+  out:slide={{ axis: "y"}}
+>
+  <div class="p-3 block text-white font-medium text-xl min-sm:text-xs min-sm:font-normal sm:text-sm sm:font-normal">{propToast.message}</div>
 </div>
-
