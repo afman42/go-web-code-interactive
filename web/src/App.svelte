@@ -25,15 +25,13 @@ import {
   bracketMatching,
   foldGutter,
   foldKeymap,
-  type LanguageSupport
+  type LanguageSupport,
 } from "@codemirror/language";
 import {
   defaultKeymap,
   history,
   historyKeymap,
-
   indentWithTab
-
 } from "@codemirror/commands";
 import {
   searchKeymap,
