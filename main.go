@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"embed"
 	"encoding/json"
 	"flag"
@@ -14,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/afman42/go-web-code-interactive/utils"
-	"github.com/joho/godotenv"
 )
 
 //go:embed web/dist
@@ -43,7 +43,7 @@ func main() {
 		return nil
 	})
 	flag.Parse()
-	err := godotenv.Load(env)
+	err := loadEnvFile(env)
 	if err != nil {
 		log.Fatal("Error loading " + env + " file")
 	}
@@ -230,4 +230,41 @@ func index(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Allow", "GET, POST, OPTIONS")
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+// ref: https://grok.com/share/bGVnYWN5_6e37d0ea-cc9a-4ab2-8cad-ad24fe59e00d
+func loadEnvFile(filename string) error {
+	// Open the file
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Read the file line by line
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		line = strings.TrimSpace(line) // Remove leading/trailing whitespace
+
+		// Skip empty lines or comments
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		// Split line into key and value
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			continue // Skip malformed lines
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+
+		// Set the environment variable
+		os.Setenv(key, value)
+	}
+
+	// Check for scanning errors
+	return scanner.Err()
 }
