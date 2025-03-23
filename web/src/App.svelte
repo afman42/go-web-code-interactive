@@ -1,27 +1,194 @@
 <script lang="ts">
 //Component
 import ToasterContainer from "./component/ToasterContainer.svelte"
+// AutoCompletion Just Javascript not another langugage, just add CompletionContext
+// ref: https://grok.com/share/bGVnYWN5_9e2babff-5a19-44e7-8cdd-12b1461cf310
 //Lib
-import CodeMirror from "svelte-codemirror-editor";
-import type { EditorView } from "@codemirror/view";
-import { onDestroy} from "svelte";
-import { javascript } from "@codemirror/lang-javascript"
-import { go } from "@codemirror/lang-go"
-import { php, phpLanguage } from "@codemirror/lang-php"
+import { onMount, onDestroy } from "svelte";
+import { EditorState, type Extension } from "@codemirror/state";
+import {
+  EditorView,
+  keymap,
+  highlightSpecialChars,
+  drawSelection,
+  highlightActiveLine,
+  dropCursor,
+  rectangularSelection,
+  crosshairCursor,
+  lineNumbers,
+  highlightActiveLineGutter
+} from "@codemirror/view";
+import {
+  defaultHighlightStyle,
+  syntaxHighlighting,
+  indentOnInput,
+  bracketMatching,
+  foldGutter,
+  foldKeymap,
+  type LanguageSupport
+} from "@codemirror/language";
+import {
+  defaultKeymap,
+  history,
+  historyKeymap
+} from "@codemirror/commands";
+import {
+  searchKeymap,
+  highlightSelectionMatches
+} from "@codemirror/search";
+import {
+  autocompletion,
+  completionKeymap,
+  closeBrackets,
+  closeBracketsKeymap,
+  type CompletionContext,
+  type CompletionResult,
+} from "@codemirror/autocomplete";
+import { lintKeymap } from "@codemirror/lint";
+import { javascript } from "@codemirror/lang-javascript";
+import { go } from "@codemirror/lang-go";
+import { php } from "@codemirror/lang-php";
+// lib state
 import { langState } from "./utils/lang-state.svelte"
 import { useToast } from './utils/toast.svelte';
-let view: EditorView;
 let stdout = $state("Nothing");
 let stderr = $state("Nothing");
 let disabled = $state(false);
-let count = $state(0);
 const toast = useToast()
-onDestroy(() => {
-  view.destroy();
-})
-function onChange(e: CustomEvent){
-  langState.sampleDataLang[langState.type][langState.value] = e.detail
+// Language configuration map
+const languageConfigs = {
+  node: javascript(),
+  php: php(),
+  go: go()
+} as Record<string,LanguageSupport>;
+// Reactive states
+let view: EditorView | null = null;
+let editorContainer: HTMLDivElement;
+let currentLang = $state(languageConfigs.node) as any;
+let editorValue = $state("");
+let prevLang = $state(langState.value);
+let prevType = $state(langState.type);
+
+// Custom autocompletion for PHP
+function phpCompletions(context: CompletionContext): CompletionResult | null {
+  const word = context.matchBefore(/\w*/);
+  if (!word || word.from === word.to && !context.explicit) return null;
+
+  const phpKeywords = [
+    "echo", "print", "if", "else", "foreach", "function", "return",
+    "class", "public", "private", "protected", "namespace", "use"
+  ];
+  const phpFunctions = [
+    "array", "strlen", "str_replace", "explode", "implode", "isset"
+  ];
+
+  return {
+    from: word.from,
+    options: [
+      ...phpKeywords.map(kw => ({ label: kw, type: "keyword" })),
+      ...phpFunctions.map(fn => ({ label: fn, type: "function" }))
+    ]
+  };
 }
+
+// Custom autocompletion for Go
+function goCompletions(context: CompletionContext): CompletionResult | null {
+  const word = context.matchBefore(/\w*/);
+  if (!word || word.from === word.to && !context.explicit) return null;
+
+  const goKeywords = [
+    "func", "var", "const", "if", "else", "for", "range", "return",
+    "struct", "interface", "package", "import", "type"
+  ];
+  const goBuiltins = [
+    "println", "print", "len", "cap", "make", "new", "append"
+  ];
+
+  return {
+    from: word.from,
+    options: [
+      ...goKeywords.map(kw => ({ label: kw, type: "keyword" })),
+      ...goBuiltins.map(fn => ({ label: fn, type: "function" }))
+    ]
+  };
+}
+
+// Language-specific completion extensions
+const completionExtensions = {
+  node: autocompletion(), // Built-in for JavaScript
+  php: autocompletion({ override: [phpCompletions] }),
+  go: autocompletion({ override: [goCompletions] })
+} as Record<string,Extension>;
+
+// Base extensions (shared across all configurations)
+const baseExtensions: Extension[] = [
+  lineNumbers(),
+  foldGutter(),
+  highlightSpecialChars(),
+  history(),
+  drawSelection(),
+  dropCursor(),
+  EditorState.allowMultipleSelections.of(true),
+  indentOnInput(),
+  syntaxHighlighting(defaultHighlightStyle),
+  bracketMatching(),
+  closeBrackets(),
+  autocompletion(),
+  rectangularSelection(),
+  crosshairCursor(),
+  highlightActiveLine(),
+  highlightActiveLineGutter(),
+  highlightSelectionMatches(),
+  keymap.of([
+    ...closeBracketsKeymap,
+    ...defaultKeymap,
+    ...searchKeymap,
+    ...historyKeymap,
+    ...foldKeymap,
+    ...completionKeymap,
+    ...lintKeymap
+  ])
+];
+// Initialize editor on mount
+onMount(() => {
+  const initialState = EditorState.create({
+    doc: langState.sampleDataLang[langState.type][langState.value] || "",
+    extensions: [...baseExtensions, currentLang, completionExtensions[langState.value]]
+  });
+
+  view = new EditorView({
+    state: initialState,
+    parent: editorContainer,
+    dispatch: (tr) => {
+      view?.update([tr]);
+      if (tr.docChanged) {
+        editorValue = view?.state.doc.toString() || "";
+        langState.sampleDataLang[langState.type][langState.value] = editorValue;
+      }
+    }
+  });
+
+  editorValue = view.state.doc.toString();
+});
+
+// Effect for language/type changes
+$effect(() => {
+  if (langState.value !== prevLang || langState.type !== prevType) {
+    currentLang = languageConfigs[langState.value] || languageConfigs.node;
+    editorValue = langState.sampleDataLang[langState.type][langState.value] || "";
+    
+    if (view) {
+      const newState = EditorState.create({
+        doc: editorValue,
+        extensions: [...baseExtensions, currentLang, completionExtensions[langState.value]]
+      });
+      view.setState(newState);
+    }
+    
+    prevLang = langState.value;
+    prevType = langState.type;
+  }
+});
 async function send(){
   toast.info("Waiting Response",3000)
   disabled = true
@@ -58,24 +225,27 @@ async function send(){
 }
 function onChangeRadio(event: Event){
   langState.value = (event.target as HTMLInputElement).value
-  count++
   stdout = "Nothing"
   stderr = "Nothing" 
 }
 function onChangeType(event: Event){
   langState.type = (event.target as HTMLInputElement).value
-  count++
   stdout = "Nothing"
   stderr = "Nothing"
 }
+
+// Clean up
+onDestroy(() => {
+  view?.destroy();
+  view = null;
+});
+
 </script>
 
 <div class="grid grid-cols-2 gap-4 sm:flex sm:flex-col min-sm:flex min-sm:flex-col">
   <div class="flex flex-col m-4">
     <div class="flex w-full border-black border-2 border-solid mb-2">
-      {#key count}
-        <CodeMirror class="w-full" bind:value={langState.sampleDataLang[langState.type][langState.value]} readonly={disabled} on:change={(e) => onChange(e)} on:ready={(e) => view = e.detail} lang={javascript()} extensions={[go(),php({ baseLanguage: phpLanguage})]}/> 
-      {/key}
+      <div bind:this={editorContainer} class="w-full"></div>
     </div> 
     <div class="flex items-center md:flex md:items-center sm:flex sm:items-center min-sm:flex min-sm:flex-col">
         <button class="bg-red-500 flex py-2.5 px-3 min-sm:h-8 min-sm:hover:bg-white min-sm:hover:border-2 min-sm:hover:text-black min-sm:hover:border-red-500 min-sm:w-full md:px-1 md:py-2 md:text-sm min-sm:text-xs min-sm:items-center min-sm:justify-center text-white rounded-lg mr-1" disabled={disabled} onclick={send} type="button">Send</button> 
