@@ -30,7 +30,10 @@ import {
 import {
   defaultKeymap,
   history,
-  historyKeymap
+  historyKeymap,
+
+  indentWithTab
+
 } from "@codemirror/commands";
 import {
   searchKeymap,
@@ -140,6 +143,7 @@ const baseExtensions: Extension[] = [
   highlightActiveLineGutter(),
   highlightSelectionMatches(),
   keymap.of([
+    indentWithTab,
     ...closeBracketsKeymap,
     ...defaultKeymap,
     ...searchKeymap,
