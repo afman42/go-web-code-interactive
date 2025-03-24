@@ -42,6 +42,7 @@ import {
   completionKeymap,
   closeBrackets,
   closeBracketsKeymap,
+  snippetCompletion,
   type CompletionContext,
   type CompletionResult,
 } from "@codemirror/autocomplete";
@@ -70,13 +71,14 @@ let editorValue = $state("");
 let prevLang = $state(langState.value);
 let prevType = $state(langState.type);
 
+
 // Custom autocompletion for PHP
 function phpCompletions(context: CompletionContext): CompletionResult | null {
   const word = context.matchBefore(/\w*/);
   if (!word || word.from === word.to && !context.explicit) return null;
 
   const phpKeywords = [
-    "echo", "print", "if", "else", "foreach", "function", "return",
+    "echo", "else", "foreach", "function", "return",
     "class", "public", "private", "protected", "namespace", "use"
   ];
   const phpFunctions = [
@@ -87,7 +89,8 @@ function phpCompletions(context: CompletionContext): CompletionResult | null {
     from: word.from,
     options: [
       ...phpKeywords.map(kw => ({ label: kw, type: "keyword" })),
-      ...phpFunctions.map(fn => ({ label: fn, type: "function" }))
+      ...phpFunctions.map(fn => ({ label: fn, type: "function" })),
+      snippetCompletion("for (let ${i} = 0; ${i} < ${len}; ${i}++) {\n\t${}\n}",{label: "for", detail: "loop"}) // Example Snippet Completion
     ]
   };
 }
@@ -98,7 +101,7 @@ function goCompletions(context: CompletionContext): CompletionResult | null {
   if (!word || word.from === word.to && !context.explicit) return null;
 
   const goKeywords = [
-    "func", "var", "const", "if", "else", "for", "range", "return",
+    "func", "var", "const", "else", "for", "range", "return",
     "struct", "interface", "package", "import", "type"
   ];
   const goBuiltins = [
@@ -109,7 +112,8 @@ function goCompletions(context: CompletionContext): CompletionResult | null {
     from: word.from,
     options: [
       ...goKeywords.map(kw => ({ label: kw, type: "keyword" })),
-      ...goBuiltins.map(fn => ({ label: fn, type: "function" }))
+      ...goBuiltins.map(fn => ({ label: fn, type: "function" })),
+      snippetCompletion("if ${} {\n\t${}\n}",{label: "if", detail: "if ${i} block"}) // Example Snippet Completion
     ]
   };
 }
@@ -241,6 +245,7 @@ onDestroy(() => {
   view?.destroy();
   view = null;
 });
+
 
 </script>
 
