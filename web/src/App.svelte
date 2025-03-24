@@ -66,7 +66,7 @@ const languageConfigs = {
 // Reactive states
 let view: EditorView | null = null;
 let editorContainer: HTMLDivElement;
-let currentLang = $state(languageConfigs.node) as any;
+let currentLang = $state(languageConfigs.node) as LanguageSupport;
 let editorValue = $state("");
 let prevLang = $state(langState.value);
 let prevType = $state(langState.type);
