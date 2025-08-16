@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// TODO
 const WindowsFolderTmp = "\\tmp\\"
 const LinuxFolderTmp = "/tmp/"
 

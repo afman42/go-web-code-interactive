@@ -20,8 +20,9 @@ import (
 //go:embed web/dist
 var WebContent embed.FS
 
-var IpCors string
+var IPCors string
 
+// TODO
 const (
 	ModeDev     = "dev"
 	ModeProd    = "prod"
@@ -48,7 +49,7 @@ func main() {
 		log.Fatal("Error loading " + env + " file")
 	}
 
-	IpCors = os.Getenv("CORS_DOMAIN")
+	IPCors = os.Getenv("CORS_DOMAIN")
 	Port := os.Getenv("APP_PORT")
 	if _, err := os.Stat("./tmp"); err != nil {
 		if os.IsNotExist(err) {
@@ -112,12 +113,12 @@ func index(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", IpCors)
+	w.Header().Set("Access-Control-Allow-Origin", IPCors)
 	w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	switch r.Method {
 	case http.MethodGet:
-		var tmp, err = template.ParseFS(WebContent, "web/dist/index.html")
+		tmp, err := template.ParseFS(WebContent, "web/dist/index.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -132,7 +133,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		var (
 			data Data
-			args string = "-"
+			args = "-"
 		)
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
@@ -197,11 +198,29 @@ func index(w http.ResponseWriter, r *http.Request) {
 		}
 		err = os.WriteFile(filename, []byte(data.Txt), 0755)
 		if err != nil {
-			fmt.Printf("unable to write file: %w", err)
+			log.Printf("unable to write file: %v", err.Error())
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(struct {
+				StatusCode int    `json:"statusCode"`
+				Message    string `json:"message"`
+			}{
+				StatusCode: http.StatusBadRequest,
+				Message:    "Something Went Wrong, unable to write file",
+			})
+			return
 		}
 		err = utils.MoveFile(filename, utils.PathFileTemp(filename))
 		if err != nil {
-			fmt.Println("error movefile: ", err)
+			log.Printf("error movefile: %v", err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(struct {
+				StatusCode int    `json:"statusCode"`
+				Message    string `json:"message"`
+			}{
+				StatusCode: http.StatusBadRequest,
+				Message:    "Something Went Wrong, error movefile",
+			})
+			return
 		}
 
 		out, errout, err := utils.Shellout(data.Language, utils.PathFileTemp(filename))
@@ -210,6 +229,15 @@ func index(w http.ResponseWriter, r *http.Request) {
 		}
 		if err != nil {
 			log.Printf("error shell: %v\n", err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(struct {
+				StatusCode int    `json:"statusCode"`
+				Message    string `json:"message"`
+			}{
+				StatusCode: http.StatusBadRequest,
+				Message:    "Something Went Wrong, error shell",
+			})
+			return
 		}
 		fmt.Println("--- stdout ---")
 		fmt.Println(out)
@@ -218,7 +246,6 @@ func index(w http.ResponseWriter, r *http.Request) {
 		data.Stdout = out
 		data.Stderr = errout
 		data.StatusCode = http.StatusOK
-		http.StatusText(http.StatusOK)
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data)
 		return
