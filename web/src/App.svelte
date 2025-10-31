@@ -1,9 +1,9 @@
 <script lang="ts">
-//Component
+// Component
 import ToasterContainer from "./component/ToasterContainer.svelte"
 // AutoCompletion Just Javascript not another langugage, just add CompletionContext
 // ref: https://grok.com/share/bGVnYWN5_9e2babff-5a19-44e7-8cdd-12b1461cf310
-//Lib
+// Lib
 import { onMount, onDestroy } from "svelte";
 import { EditorState, type Extension } from "@codemirror/state";
 import {
@@ -53,79 +53,39 @@ import { php } from "@codemirror/lang-php";
 // lib state
 import { langState } from "./utils/lang-state.svelte"
 import { useToast } from './utils/toast.svelte';
+import { validateUserCode } from './utils/validation';
+
+// Using Svelte 5 runes for state management
 let stdout = $state("Nothing");
 let stderr = $state("Nothing");
-let disabled = $state(false);
-const toast = useToast()
-// Language configuration map
+let isLoading = $state(false);
+let editorValue = $state("");
+let currentLangValue = $state(langState.value);
+let currentTypeValue = $state(langState.type);
+
+// Static configurations (these are just constant values)
 const languageConfigs = {
   node: javascript(),
   php: php(),
   go: go()
-} as Record<string,LanguageSupport>;
+} as Record<string, LanguageSupport>;
+
+// Reactive values using $derived
+const currentLang = $derived(languageConfigs[currentLangValue] || languageConfigs.node);
+const isExecuting = $derived(isLoading);
+const canExecute = $derived(!isLoading);
+
 // Reactive states
 let view: EditorView | null = null;
 let editorContainer: HTMLDivElement;
-let currentLang = $state(languageConfigs.node) as LanguageSupport;
-let editorValue = $state("");
-let prevLang = $state(langState.value);
-let prevType = $state(langState.type);
 
-
-// Custom autocompletion for PHP
-function phpCompletions(context: CompletionContext): CompletionResult | null {
-  const word = context.matchBefore(/\w*/);
-  if (!word || word.from === word.to && !context.explicit) return null;
-
-  const phpKeywords = [
-    "echo", "else", "foreach", "function", "return",
-    "class", "public", "private", "protected", "namespace", "use"
-  ];
-  const phpFunctions = [
-    "array", "strlen", "str_replace", "explode", "implode", "isset"
-  ];
-
-  return {
-    from: word.from,
-    options: [
-      ...phpKeywords.map(kw => ({ label: kw, type: "keyword" })),
-      ...phpFunctions.map(fn => ({ label: fn, type: "function" })),
-      snippetCompletion("for (let ${i} = 0; ${i} < ${len}; ${i}++) {\n\t${}\n}",{label: "for", detail: "loop"}) // Example Snippet Completion
-    ]
-  };
-}
-
-// Custom autocompletion for Go
-function goCompletions(context: CompletionContext): CompletionResult | null {
-  const word = context.matchBefore(/\w*/);
-  if (!word || word.from === word.to && !context.explicit) return null;
-
-  const goKeywords = [
-    "func", "var", "const", "else", "for", "range", "return",
-    "struct", "interface", "package", "import", "type"
-  ];
-  const goBuiltins = [
-    "println", "print", "len", "cap", "make", "new", "append"
-  ];
-
-  return {
-    from: word.from,
-    options: [
-      ...goKeywords.map(kw => ({ label: kw, type: "keyword" })),
-      ...goBuiltins.map(fn => ({ label: fn, type: "function" })),
-      snippetCompletion("if ${} {\n\t${}\n}",{label: "if", detail: "if ${i} block"}) // Example Snippet Completion
-    ]
-  };
-}
-
-// Language-specific completion extensions
+// Static configurations
 const completionExtensions = {
   node: autocompletion(), // Built-in for JavaScript
   php: autocompletion({ override: [phpCompletions] }),
   go: autocompletion({ override: [goCompletions] })
 } as Record<string,Extension>;
 
-// Base extensions (shared across all configurations)
 const baseExtensions: Extension[] = [
   lineNumbers(),
   foldGutter(),
@@ -155,11 +115,58 @@ const baseExtensions: Extension[] = [
     ...lintKeymap
   ])
 ];
+
+// Custom autocompletion for PHP
+function phpCompletions(context: CompletionContext): CompletionResult | null {
+  const word = context.matchBefore(/\w*/);
+  if (!word || word.from === word.to && !context.explicit) return null;
+
+  const phpKeywords = [
+    "echo", "else", "foreach", "function", "return",
+    "class", "public", "private", "protected", "namespace", "use"
+  ];
+  const phpFunctions = [
+    "array", "strlen", "str_replace", "explode", "implode", "isset"
+  ];
+
+  return {
+    from: word.from,
+    options: [
+      ...phpKeywords.map((kw: string) => ({ label: kw, type: "keyword" })),
+      ...phpFunctions.map((fn: string) => ({ label: fn, type: "function" })),
+      snippetCompletion("for (let ${i} = 0; ${i} < ${len}; ${i}++) {\n\t${}\n}",{label: "for", detail: "loop"})
+    ]
+  };
+}
+
+// Custom autocompletion for Go
+function goCompletions(context: CompletionContext): CompletionResult | null {
+  const word = context.matchBefore(/\w*/);
+  if (!word || word.from === word.to && !context.explicit) return null;
+
+  const goKeywords = [
+    "func", "var", "const", "else", "for", "range", "return",
+    "struct", "interface", "package", "import", "type"
+  ];
+  const goBuiltins = [
+    "println", "print", "len", "cap", "make", "new", "append"
+  ];
+
+  return {
+    from: word.from,
+    options: [
+      ...goKeywords.map((kw: string) => ({ label: kw, type: "keyword" })),
+      ...goBuiltins.map((fn: string) => ({ label: fn, type: "function" })),
+      snippetCompletion("if ${} {\n\t${}\n}",{label: "if", detail: "if ${i} block"})
+    ]
+  };
+}
+
 // Initialize editor on mount
 onMount(() => {
   const initialState = EditorState.create({
-    doc: langState.sampleDataLang[langState.type][langState.value] || "",
-    extensions: [...baseExtensions, currentLang, completionExtensions[langState.value]]
+    doc: langState.sampleDataLang[currentTypeValue][currentLangValue] || "",
+    extensions: [...baseExtensions, currentLang, completionExtensions[currentLangValue]]
   });
 
   view = new EditorView({
@@ -169,7 +176,7 @@ onMount(() => {
       view?.update([tr]);
       if (tr.docChanged) {
         editorValue = view?.state.doc.toString() || "";
-        langState.sampleDataLang[langState.type][langState.value] = editorValue;
+        langState.sampleDataLang[currentTypeValue][currentLangValue] = editorValue;
       }
     }
   });
@@ -177,67 +184,95 @@ onMount(() => {
   editorValue = view.state.doc.toString();
 });
 
-// Effect for language/type changes
+// Use $effect for reactive updates
 $effect(() => {
-  if (langState.value !== prevLang || langState.type !== prevType) {
-    currentLang = languageConfigs[langState.value] || languageConfigs.node;
+  if (currentLangValue !== langState.value || currentTypeValue !== langState.type) {
     editorValue = langState.sampleDataLang[langState.type][langState.value] || "";
     
     if (view) {
+      const newLang = languageConfigs[langState.value] || languageConfigs.node;
       const newState = EditorState.create({
         doc: editorValue,
-        extensions: [...baseExtensions, currentLang, completionExtensions[langState.value]]
+        extensions: [...baseExtensions, newLang, completionExtensions[langState.value]]
       });
       view.setState(newState);
     }
     
-    prevLang = langState.value;
-    prevType = langState.type;
+    currentLangValue = langState.value;
+    currentTypeValue = langState.type;
   }
 });
-async function send(){
-  toast.info("Waiting Response",3000)
-  disabled = true
+
+const toast = useToast();
+
+async function send() {
+  // Client-side validation
+  const validation = validateUserCode(langState.sampleDataLang[currentTypeValue][currentLangValue], currentLangValue);
+  if (!validation.isValid) {
+    toast.error(`Validation failed: ${validation.errors.join(', ')}`, 3000);
+    return;
+  }
+  
+  toast.info("Waiting Response", 3000);
+  isLoading = true;
+  
   const payload = {
-    "txt": langState.sampleDataLang[langState.type][langState.value],
-    "lang":langState.value,
-    "type": langState.type
-  } as { [key: string]: string }
-  let fetch = import("./utils/fetch"); 
+    "txt": langState.sampleDataLang[currentTypeValue][currentLangValue],
+    "lang": currentLangValue,
+    "type": currentTypeValue
+  };
+  
   try {
-    const res = await (await fetch).fetchApiPost<FetchData>(payload,"/")
-    if(res.statusCode == 200){
-        disabled = false
-        stderr = res.errout.trim().length > 0 ? res.errout : "Nothing"
-        stdout = res.out.trim().length > 0 && stderr == "Nothing" ? res.out : "Nothing"
-        if(langState.type == "stq") {
-          stderr = res.errout.trim().length > 0 ? res.errout : "Nothing"
-          stdout = res.out.trim().length > 0 ? JSON.parse(res.out.trim()) : "Nothing"
-        }
-        if(stderr != "Nothing") {
-          toast.warning("Something Went Wrong",1000)
-        }
-        if(stdout != "Nothing" ){
-          toast.success("Success Response",1000)
-        }
+    const fetchModule = await import("./utils/fetch"); 
+    const res = await fetchModule.fetchApiPost<FetchData>(payload, "/");
+    
+    if (res.statusCode === 200) {
+      isLoading = false;
+      stderr = res.errout.trim().length > 0 ? res.errout : "Nothing";
+      stdout = res.out.trim().length > 0 && stderr === "Nothing" ? res.out : "Nothing";
+      
+      if (currentTypeValue === "stq") {
+        stderr = res.errout.trim().length > 0 ? res.errout : "Nothing";
+        stdout = res.out.trim().length > 0 ? JSON.parse(res.out.trim()) : "Nothing";
       }
+      
+      if (stderr !== "Nothing") {
+        toast.warning("Something Went Wrong", 1000);
+      }
+      if (stdout !== "Nothing") {
+        toast.success("Success Response", 1000);
+      }
+    }
   } catch (error: unknown) {
-    const parseMessage = JSON.parse(error as string)
-    if(parseMessage.statusCode == 400) toast.error(parseMessage.message,1000)
-    disabled = false
-    stdout = "Nothing"
-    stderr = "Nothing" 
+    let errorMessage = "An error occurred";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      try {
+        const parsedError = JSON.parse(error);
+        errorMessage = parsedError.message || error;
+      } catch {
+        errorMessage = error;
+      }
+    }
+    
+    toast.error(`Error: ${errorMessage}`, 3000);
+    isLoading = false;
+    stdout = "Nothing";
+    stderr = "Nothing"; 
   }
 }
-function onChangeRadio(event: Event){
-  langState.value = (event.target as HTMLInputElement).value
-  stdout = "Nothing"
-  stderr = "Nothing" 
+
+function onChangeRadio(event: Event) {
+  langState.value = (event.target as HTMLInputElement).value;
+  stdout = "Nothing";
+  stderr = "Nothing"; 
 }
-function onChangeType(event: Event){
-  langState.type = (event.target as HTMLInputElement).value
-  stdout = "Nothing"
-  stderr = "Nothing"
+
+function onChangeType(event: Event) {
+  langState.type = (event.target as HTMLInputElement).value;
+  stdout = "Nothing";
+  stderr = "Nothing";
 }
 
 // Clean up
@@ -245,8 +280,6 @@ onDestroy(() => {
   view?.destroy();
   view = null;
 });
-
-
 </script>
 
 <div class="grid grid-cols-2 gap-4 sm:flex sm:flex-col min-sm:flex min-sm:flex-col">
@@ -255,7 +288,7 @@ onDestroy(() => {
       <div bind:this={editorContainer} class="w-full"></div>
     </div> 
     <div class="flex items-center md:flex md:items-center sm:flex sm:items-center min-sm:flex min-sm:flex-col">
-        <button class="bg-red-500 flex py-2.5 px-3 min-sm:h-8 min-sm:hover:bg-white min-sm:hover:border-2 min-sm:hover:text-black min-sm:hover:border-red-500 min-sm:w-full md:px-1 md:py-2 md:text-sm min-sm:text-xs min-sm:items-center min-sm:justify-center text-white rounded-lg mr-1" disabled={disabled} onclick={send} type="button">Send</button> 
+        <button class="bg-red-500 flex py-2.5 px-3 min-sm:h-8 min-sm:hover:bg-white min-sm:hover:border-2 min-sm:hover:text-black min-sm:hover:border-red-500 min-sm:w-full md:px-1 md:py-2 md:text-sm min-sm:text-xs min-sm:items-center min-sm:justify-center text-white rounded-lg mr-1" disabled={!canExecute} onclick={send} type="button">Send</button> 
         <div class="flex gap-1 min-sm:justify-between">
           <div class="flex gap-2 md:flex md:items-center sm:flex sm:items-center sm:gap-1 min-sm:flex min-sm:items-center min-sm:gap-1">
           <label for="node" class="min-sm:text-sm min-sm:flex min-sm:gap-1 md:text-sm">
