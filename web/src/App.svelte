@@ -178,7 +178,7 @@ function onEditorChange(value: string) {
               onchange={onChangeRadio} 
               checked={langState.value === SUPPORTED_LANGUAGES.NODE}
             />
-            <span  class="text-white">Node</span>
+            <span  class="dark:text-white">Node</span>
           </label>
           <label class="flex items-center gap-1 cursor-pointer">
             <input 
@@ -187,7 +187,7 @@ function onEditorChange(value: string) {
               onchange={onChangeRadio} 
               checked={langState.value === SUPPORTED_LANGUAGES.PHP}
             />
-            <span  class="text-white">PHP</span>
+            <span  class="dark:text-white">PHP</span>
           </label>
           <label class="flex items-center gap-1 cursor-pointer">
             <input 
@@ -196,7 +196,7 @@ function onEditorChange(value: string) {
               onchange={onChangeRadio} 
               checked={langState.value === SUPPORTED_LANGUAGES.GO}
             />
-            <span  class="text-white">Go</span>
+            <span  class="dark:text-white">Go</span>
           </label>
         </div>
         
@@ -211,7 +211,7 @@ function onEditorChange(value: string) {
               onchange={onChangeType} 
               checked={langState.type === EXECUTION_TYPES.REPL}
             />
-            <span  class="text-white">REPL</span>
+            <span  class="dark:text-white">REPL</span>
           </label>
           <label class="flex items-center gap-1 cursor-pointer">
             <input 
@@ -220,7 +220,7 @@ function onEditorChange(value: string) {
               onchange={onChangeType} 
               checked={langState.type === EXECUTION_TYPES.STQ}
             />
-            <span class="text-white">STQ</span>
+            <span class="dark:text-white">STQ</span>
           </label>
         </div>
       </div>
@@ -249,7 +249,7 @@ function onEditorChange(value: string) {
             </span>
           {/if}
         </div>
-        <div class="min-h-[100px] max-h-40 overflow-auto p-3 bg-white text-white dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600 text-sm font-mono whitespace-pre-wrap">
+        <div class="min-h-[100px] max-h-40 overflow-auto p-3 bg-white dark:text-white dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600 text-sm font-mono whitespace-pre-wrap">
           {stdout === "Nothing" ? "No output" : stdout}
         </div>
       </div>
