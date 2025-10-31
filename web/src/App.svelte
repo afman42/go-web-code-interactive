@@ -207,7 +207,7 @@ const toast = useToast();
 
 async function send() {
   // Client-side validation
-  const validation = validateUserCode(langState.sampleDataLang[currentTypeValue][currentLangValue], currentLangValue);
+  const validation = validateUserCode(langState.sampleDataLang[currentTypeValue][currentLangValue]);
   if (!validation.isValid) {
     toast.error(`Validation failed: ${validation.errors.join(', ')}`, 3000);
     return;
