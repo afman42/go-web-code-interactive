@@ -1,3 +1,5 @@
+import { CODE_MAX_LENGTH } from '../constants';
+
 export function validateUserCode(code: string): {
   isValid: boolean;
   errors: string[];
@@ -5,9 +7,8 @@ export function validateUserCode(code: string): {
   const errors: string[] = [];
 
   // Additional validations
-  if (code.length > 10000) {
-    // 10KB limit
-    errors.push("Code exceeds maximum allowed length (10,000 characters)");
+  if (code.length > CODE_MAX_LENGTH) {
+    errors.push(`Code exceeds maximum allowed length (${CODE_MAX_LENGTH} characters)`);
   }
 
   // Check for basic dangerous patterns that could apply to any language

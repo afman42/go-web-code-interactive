@@ -1,225 +1,73 @@
 <script lang="ts">
 // Component
 import ToasterContainer from "./component/ToasterContainer.svelte"
-// AutoCompletion Just Javascript not another langugage, just add CompletionContext
-// ref: https://grok.com/share/bGVnYWN5_9e2babff-5a19-44e7-8cdd-12b1461cf310
-// Lib
-import { onMount, onDestroy } from "svelte";
-import { EditorState, type Extension } from "@codemirror/state";
-import {
-  EditorView,
-  keymap,
-  highlightSpecialChars,
-  drawSelection,
-  highlightActiveLine,
-  dropCursor,
-  rectangularSelection,
-  crosshairCursor,
-  lineNumbers,
-  highlightActiveLineGutter
-} from "@codemirror/view";
-import {
-  defaultHighlightStyle,
-  syntaxHighlighting,
-  indentOnInput,
-  bracketMatching,
-  foldGutter,
-  foldKeymap,
-  type LanguageSupport,
-} from "@codemirror/language";
-import {
-  defaultKeymap,
-  history,
-  historyKeymap,
-  indentWithTab
-} from "@codemirror/commands";
-import {
-  searchKeymap,
-  highlightSelectionMatches
-} from "@codemirror/search";
-import {
-  autocompletion,
-  completionKeymap,
-  closeBrackets,
-  closeBracketsKeymap,
-  snippetCompletion,
-  type CompletionContext,
-  type CompletionResult,
-} from "@codemirror/autocomplete";
-import { lintKeymap } from "@codemirror/lint";
-import { javascript } from "@codemirror/lang-javascript";
-import { go } from "@codemirror/lang-go";
-import { php } from "@codemirror/lang-php";
-// lib state
+import ExecuteButton from "./component/ExecuteButton.svelte"
+import Editor from "./component/Editor.svelte"
+// Lib state
 import { langState } from "./utils/lang-state.svelte"
 import { useToast } from './utils/toast.svelte';
 import { validateUserCode } from './utils/validation';
+import { TOAST_DURATION_MEDIUM, TOAST_DURATION_SHORT, SUPPORTED_LANGUAGES, EXECUTION_TYPES, THEMES } from './constants';
 
 // Using Svelte 5 runes for state management
 let stdout = $state("Nothing");
 let stderr = $state("Nothing");
 let isLoading = $state(false);
 let editorValue = $state("");
+let editorInitialized = $state(false);
 let currentLangValue = $state(langState.value);
 let currentTypeValue = $state(langState.type);
-
-// Static configurations (these are just constant values)
-const languageConfigs = {
-  node: javascript(),
-  php: php(),
-  go: go()
-} as Record<string, LanguageSupport>;
+let editorRef: Editor | null = null;
+let theme: 'light' | 'dark' = $state(THEMES.LIGHT);
 
 // Reactive values using $derived
-const currentLang = $derived(languageConfigs[currentLangValue] || languageConfigs.node);
 const isExecuting = $derived(isLoading);
 const canExecute = $derived(!isLoading);
 
-// Reactive states
-let view: EditorView | null = null;
-let editorContainer: HTMLDivElement;
-
-// Static configurations
-const completionExtensions = {
-  node: autocompletion(), // Built-in for JavaScript
-  php: autocompletion({ override: [phpCompletions] }),
-  go: autocompletion({ override: [goCompletions] })
-} as Record<string,Extension>;
-
-const baseExtensions: Extension[] = [
-  lineNumbers(),
-  foldGutter(),
-  highlightSpecialChars(),
-  history(),
-  drawSelection(),
-  dropCursor(),
-  EditorState.allowMultipleSelections.of(true),
-  indentOnInput(),
-  syntaxHighlighting(defaultHighlightStyle),
-  bracketMatching(),
-  closeBrackets(),
-  autocompletion(),
-  rectangularSelection(),
-  crosshairCursor(),
-  highlightActiveLine(),
-  highlightActiveLineGutter(),
-  highlightSelectionMatches(),
-  keymap.of([
-    indentWithTab,
-    ...closeBracketsKeymap,
-    ...defaultKeymap,
-    ...searchKeymap,
-    ...historyKeymap,
-    ...foldKeymap,
-    ...completionKeymap,
-    ...lintKeymap
-  ])
-];
-
-// Custom autocompletion for PHP
-function phpCompletions(context: CompletionContext): CompletionResult | null {
-  const word = context.matchBefore(/\w*/);
-  if (!word || word.from === word.to && !context.explicit) return null;
-
-  const phpKeywords = [
-    "echo", "else", "foreach", "function", "return",
-    "class", "public", "private", "protected", "namespace", "use"
-  ];
-  const phpFunctions = [
-    "array", "strlen", "str_replace", "explode", "implode", "isset"
-  ];
-
-  return {
-    from: word.from,
-    options: [
-      ...phpKeywords.map((kw: string) => ({ label: kw, type: "keyword" })),
-      ...phpFunctions.map((fn: string) => ({ label: fn, type: "function" })),
-      snippetCompletion("for (let ${i} = 0; ${i} < ${len}; ${i}++) {\n\t${}\n}",{label: "for", detail: "loop"})
-    ]
-  };
-}
-
-// Custom autocompletion for Go
-function goCompletions(context: CompletionContext): CompletionResult | null {
-  const word = context.matchBefore(/\w*/);
-  if (!word || word.from === word.to && !context.explicit) return null;
-
-  const goKeywords = [
-    "func", "var", "const", "else", "for", "range", "return",
-    "struct", "interface", "package", "import", "type"
-  ];
-  const goBuiltins = [
-    "println", "print", "len", "cap", "make", "new", "append"
-  ];
-
-  return {
-    from: word.from,
-    options: [
-      ...goKeywords.map((kw: string) => ({ label: kw, type: "keyword" })),
-      ...goBuiltins.map((fn: string) => ({ label: fn, type: "function" })),
-      snippetCompletion("if ${} {\n\t${}\n}",{label: "if", detail: "if ${i} block"})
-    ]
-  };
-}
-
-// Initialize editor on mount
-onMount(() => {
-  const initialState = EditorState.create({
-    doc: langState.sampleDataLang[currentTypeValue][currentLangValue] || "",
-    extensions: [...baseExtensions, currentLang, completionExtensions[currentLangValue]]
-  });
-
-  view = new EditorView({
-    state: initialState,
-    parent: editorContainer,
-    dispatch: (tr) => {
-      view?.update([tr]);
-      if (tr.docChanged) {
-        editorValue = view?.state.doc.toString() || "";
-        langState.sampleDataLang[currentTypeValue][currentLangValue] = editorValue;
-      }
-    }
-  });
-
-  editorValue = view.state.doc.toString();
+// Initialize editor value on first run
+$effect(() => {
+  if (!editorInitialized) {
+    editorValue = langState.sampleDataLang[langState.type][langState.value];
+    editorInitialized = true;
+  }
 });
 
-// Use $effect for reactive updates
+// Update all values when language or type changes
 $effect(() => {
-  if (currentLangValue !== langState.value || currentTypeValue !== langState.type) {
-    editorValue = langState.sampleDataLang[langState.type][langState.value] || "";
-    
-    if (view) {
-      const newLang = languageConfigs[langState.value] || languageConfigs.node;
-      const newState = EditorState.create({
-        doc: editorValue,
-        extensions: [...baseExtensions, newLang, completionExtensions[langState.value]]
-      });
-      view.setState(newState);
+  currentLangValue = langState.value;
+  currentTypeValue = langState.type;
+  const newCode = langState.sampleDataLang[langState.type][langState.value] || "";
+  if (editorValue !== newCode) {  // Only update if different
+    editorValue = newCode;
+    if (editorRef) {
+      editorRef.setEditorContent(newCode);
     }
-    
-    currentLangValue = langState.value;
-    currentTypeValue = langState.type;
   }
 });
 
 const toast = useToast();
 
 async function send() {
+  // Get current content from editor
+  if (editorRef) {
+    editorValue = editorRef.getEditorContent();
+  }
+
   // Client-side validation
-  const validation = validateUserCode(langState.sampleDataLang[currentTypeValue][currentLangValue]);
+  const validation = validateUserCode(editorValue);
   if (!validation.isValid) {
-    toast.error(`Validation failed: ${validation.errors.join(', ')}`, 3000);
+    toast.error(`Validation failed: ${validation.errors.join(', ')}`, TOAST_DURATION_MEDIUM);
     return;
   }
   
-  toast.info("Waiting Response", 3000);
+  toast.info("Executing code...", TOAST_DURATION_SHORT);
   isLoading = true;
   
+  // Use direct values from langState to ensure we have current values
   const payload = {
-    "txt": langState.sampleDataLang[currentTypeValue][currentLangValue],
-    "lang": currentLangValue,
-    "type": currentTypeValue
+    "txt": editorValue,
+    "lang": langState.value,
+    "type": langState.type
   };
   
   try {
@@ -231,16 +79,16 @@ async function send() {
       stderr = res.errout.trim().length > 0 ? res.errout : "Nothing";
       stdout = res.out.trim().length > 0 && stderr === "Nothing" ? res.out : "Nothing";
       
-      if (currentTypeValue === "stq") {
+      if (langState.type === EXECUTION_TYPES.STQ) {
         stderr = res.errout.trim().length > 0 ? res.errout : "Nothing";
         stdout = res.out.trim().length > 0 ? JSON.parse(res.out.trim()) : "Nothing";
       }
       
       if (stderr !== "Nothing") {
-        toast.warning("Something Went Wrong", 1000);
+        toast.warning("Code executed with errors", TOAST_DURATION_SHORT);
       }
       if (stdout !== "Nothing") {
-        toast.success("Success Response", 1000);
+        toast.success("Code executed successfully", TOAST_DURATION_SHORT);
       }
     }
   } catch (error: unknown) {
@@ -256,7 +104,7 @@ async function send() {
       }
     }
     
-    toast.error(`Error: ${errorMessage}`, 3000);
+    toast.error(`Execution failed: ${errorMessage}`, TOAST_DURATION_MEDIUM);
     isLoading = false;
     stdout = "Nothing";
     stderr = "Nothing"; 
@@ -264,68 +112,162 @@ async function send() {
 }
 
 function onChangeRadio(event: Event) {
-  langState.value = (event.target as HTMLInputElement).value;
+  const target = event.target as HTMLInputElement;
+  langState.value = target.value;
   stdout = "Nothing";
   stderr = "Nothing"; 
 }
 
 function onChangeType(event: Event) {
-  langState.type = (event.target as HTMLInputElement).value;
+  const target = event.target as HTMLInputElement;
+  langState.type = target.value;
   stdout = "Nothing";
   stderr = "Nothing";
 }
 
-// Clean up
-onDestroy(() => {
-  view?.destroy();
-  view = null;
-});
+function toggleTheme() {
+  theme = theme === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT;
+}
+
+function onEditorChange(value: string) {
+  editorValue = value;
+  // Update the langState with the current editor value using current lang and type
+  langState.sampleDataLang[langState.type][langState.value] = value;
+}
 </script>
 
-<div class="grid grid-cols-2 gap-4 sm:flex sm:flex-col min-sm:flex min-sm:flex-col">
-  <div class="flex flex-col m-4">
-    <div class="flex w-full border-black border-2 border-solid mb-2">
-      <div bind:this={editorContainer} class="w-full"></div>
-    </div> 
-    <div class="flex items-center md:flex md:items-center sm:flex sm:items-center min-sm:flex min-sm:flex-col">
-        <button class="bg-red-500 flex py-2.5 px-3 min-sm:h-8 min-sm:hover:bg-white min-sm:hover:border-2 min-sm:hover:text-black min-sm:hover:border-red-500 min-sm:w-full md:px-1 md:py-2 md:text-sm min-sm:text-xs min-sm:items-center min-sm:justify-center text-white rounded-lg mr-1" disabled={!canExecute} onclick={send} type="button">Send</button> 
-        <div class="flex gap-1 min-sm:justify-between">
-          <div class="flex gap-2 md:flex md:items-center sm:flex sm:items-center sm:gap-1 min-sm:flex min-sm:items-center min-sm:gap-1">
-          <label for="node" class="min-sm:text-sm min-sm:flex min-sm:gap-1 md:text-sm">
-            <input type="radio" value="node" onchange={onChangeRadio} checked={langState.value == "node"}/>Node
-            </label>
-          <label for="php" class="min-sm:text-xs min-sm:flex min-sm:gap-1 md:text-sm">
-            <input type="radio" value="php" onchange={onChangeRadio} checked={langState.value == "php"} />PHP
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4 max-w-7xl mx-auto">
+  <!-- Editor Section -->
+  <div class="flex flex-col">
+    <div class="border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden shadow-lg">
+      <div class="h-[500px]">
+        <Editor 
+          bind:this={editorRef}
+          language={currentLangValue}
+          code={langState.sampleDataLang[currentTypeValue][currentLangValue]}
+          onChange={onEditorChange}
+          theme={theme}
+        />
+      </div>
+    </div>
+    
+    <!-- Controls -->
+    <div class="flex flex-wrap items-center gap-3 mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+      <ExecuteButton 
+        isLoading={isLoading}
+        canExecute={canExecute}
+        onClick={send}
+      />
+      
+      <button 
+        class="bg-gray-700 hover:bg-gray-800 text-white flex items-center justify-center py-2.5 px-4 rounded-lg transition-colors"
+        onclick={toggleTheme}
+        type="button"
+        aria-label="Toggle theme"
+      >
+        {theme === THEMES.LIGHT ? '🌙 Dark Mode' : '☀️ Light Mode'}
+      </button>
+      
+      <div class="flex flex-wrap gap-4 ml-auto">
+        <!-- Language Selection -->
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-1 cursor-pointer">
+            <input 
+              type="radio" 
+              value={SUPPORTED_LANGUAGES.NODE} 
+              onchange={onChangeRadio} 
+              checked={langState.value === SUPPORTED_LANGUAGES.NODE}
+            />
+            <span  class="text-white">Node</span>
           </label>
-          <label for="go" class="min-sm:text-xs min-sm:flex min-sm:gap-1 md:text-sm">
-          <input type="radio" value="go" onchange={onChangeRadio} checked={langState.value == "go"} />Go</label>
-          <b> || </b>
-          <label for="repl" class="min-sm:text-xs min-sm:flex min-sm:gap-1 md:text-sm">
-            <input type="radio" value="repl" onchange={onChangeType} checked={langState.type == "repl"} />REPL
+          <label class="flex items-center gap-1 cursor-pointer">
+            <input 
+              type="radio" 
+              value={SUPPORTED_LANGUAGES.PHP} 
+              onchange={onChangeRadio} 
+              checked={langState.value === SUPPORTED_LANGUAGES.PHP}
+            />
+            <span  class="text-white">PHP</span>
           </label>
-          <label for="stq" class="min-sm:text-xs min-sm:flex min-sm:gap-1 md:text-sm">
-            <input type="radio" value="stq" onchange={onChangeType} checked={langState.type == "stq"} />Simple Test Question
-          </div>
+          <label class="flex items-center gap-1 cursor-pointer">
+            <input 
+              type="radio" 
+              value={SUPPORTED_LANGUAGES.GO} 
+              onchange={onChangeRadio} 
+              checked={langState.value === SUPPORTED_LANGUAGES.GO}
+            />
+            <span  class="text-white">Go</span>
+          </label>
+        </div>
+        
+        <div class="text-gray-500 dark:text-gray-400 mx-2">|</div>
+        
+        <!-- Execution Type Selection -->
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-1 cursor-pointer">
+            <input 
+              type="radio" 
+              value={EXECUTION_TYPES.REPL} 
+              onchange={onChangeType} 
+              checked={langState.type === EXECUTION_TYPES.REPL}
+            />
+            <span  class="text-white">REPL</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer">
+            <input 
+              type="radio" 
+              value={EXECUTION_TYPES.STQ} 
+              onchange={onChangeType} 
+              checked={langState.type === EXECUTION_TYPES.STQ}
+            />
+            <span class="text-white">STQ</span>
+          </label>
         </div>
       </div>
     </div>
+  </div>
 
-  <div class="flex flex-col ml-4">
-    <div class="flex mt-3 flex-col">
-
-    {#if langState.type == "repl"}
-      <h6 class="min-sm:text-sm md:text-sm">StdOut</h6>
-      <blockquote class="min-sm:text-sm border-l-4 border-gray-500 my-2 py-4 pl-4 md:text-sm">{stdout}</blockquote>
-    {/if}
-    {#if langState.type == "stq"}
-      <h6 class="min-sm:text-sm md:text-sm">Simple Test Question : change integer to string</h6>
-      <h6 class="min-sm:text-sm md:text-sm">Result</h6>
-      <blockquote class="flex gap-1 min-sm:text-sm md:text-sm flex-start border-l-4 border-gray-500 my-2 py-4 pl-4">
-        <input type="checkbox" value="stq1" checked={!stdout} disabled /> Check change after int to string
-      </blockquote>
-    {/if}
-      <h6 class="min-sm:text-sm md:text-sm">StdErr</h6>
-      <blockquote class="border-l-4 md:text-sm min-sm:text-sm border-gray-500 my-2 py-4 pl-4">{stderr}</blockquote>
+  <!-- Output Section -->
+  <div class="flex flex-col">
+    <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-lg h-full">
+      <h5 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Output</h5>
+      
+      {#if langState.type === EXECUTION_TYPES.STQ}
+        <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+          <h6 class="font-medium text-blue-800 dark:text-blue-200 mb-1">Simple Test Question</h6>
+          <p class="text-sm text-blue-600 dark:text-blue-300">Change integer to string</p>
+        </div>
+      {/if}
+      
+      <!-- StdOut -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <h6 class="font-medium text-gray-700 dark:text-gray-300">StdOut</h6>
+          {#if stdout !== "Nothing"}
+            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded dark:bg-green-900/30 dark:text-green-300">
+              Success
+            </span>
+          {/if}
+        </div>
+        <div class="min-h-[100px] max-h-40 overflow-auto p-3 bg-white text-white dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600 text-sm font-mono whitespace-pre-wrap">
+          {stdout === "Nothing" ? "No output" : stdout}
+        </div>
+      </div>
+      
+      <!-- StdErr -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <h6 class="font-medium text-gray-700 dark:text-gray-300">StdErr</h6>
+          {#if stderr !== "Nothing"}
+            <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded dark:bg-red-900/30 dark:text-red-300">
+              Error
+            </span>
+          {/if}
+        </div>
+        <div class="min-h-[100px] max-h-40 overflow-auto p-3 bg-white dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600 text-sm font-mono whitespace-pre-wrap text-red-600 dark:text-red-400">
+          {stderr === "Nothing" ? "No errors" : stderr}
+        </div>
+      </div>
     </div>
   </div>
 </div>
