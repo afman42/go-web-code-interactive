@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+// Constants for rate limiter configuration
+const (
+	CleanupInterval = 10 * time.Minute
+	MaxInactivityDuration = 30 * time.Minute
+)
+
 // RateLimiter implements a simple rate limiting mechanism using a sliding window counter
 type RateLimiter struct {
 	visitors map[string][]time.Time
@@ -60,12 +66,12 @@ func (rl *RateLimiter) Allow(ip string) bool {
 // cleanupVisitors removes visitors that haven't been seen recently
 func (rl *RateLimiter) cleanupVisitors() {
 	for {
-		time.Sleep(10 * time.Minute)
+		time.Sleep(CleanupInterval)
 		
 		rl.mu.Lock()
 		for ip, requests := range rl.visitors {
 			// Remove users with no recent requests
-			if len(requests) == 0 || time.Since(requests[len(requests)-1]) > 30*time.Minute {
+			if len(requests) == 0 || time.Since(requests[len(requests)-1]) > MaxInactivityDuration {
 				delete(rl.visitors, ip)
 			}
 		}

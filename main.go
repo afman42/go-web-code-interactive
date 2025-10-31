@@ -23,32 +23,51 @@ import (
 //go:embed web/dist
 var WebContent embed.FS
 
-var IPCors string
-
-// Initialize security validator
-var securityValidator = security.NewSecurityValidator()
-
-// Initialize rate limiter (10 requests per minute per IP)
-var rateLimiter = ratelimiter.NewRateLimiter(time.Minute, 10)
-
-// TODO
+// Constants
 const (
 	ModeDev     = "dev"
 	ModeProd    = "prod"
 	ModePreview = "preview"
+	
+	// Rate limiting configuration
+	DefaultRateLimitWindow = time.Minute
+	DefaultRateLimitMaxRequests = 10 // 10 requests per minute per IP
+	
+	// Cleanup intervals for rate limiter
+	CleanupInterval = 10 * time.Minute
+	MaxInactivityDuration = 30 * time.Minute
+	
+	// Default environment files
+	EnvLocal = ".env.local"
+	EnvPreview = ".env.preview"
+	EnvProd = ".env.prod"
+	
+	// File paths
+	TempDir = "./tmp"
+	
+	// HTTP status codes
+	StatusTooManyRequests = 429
+)
+
+var (
+	IPCors string
+	// Initialize security validator
+	securityValidator = security.NewSecurityValidator()
+	// Initialize rate limiter with constants
+	rateLimiter = ratelimiter.NewRateLimiter(DefaultRateLimitWindow, DefaultRateLimitMaxRequests)
 )
 
 func main() {
 	Mode := ModeDev
-	env := ".env.local"
+	env := EnvLocal
 	flag.Func("mode", "mode:dev,preview,prod", func(s string) error {
 		if s == ModePreview {
 			Mode = ModePreview
-			env = ".env.preview"
+			env = EnvPreview
 		}
 		if s == ModeProd {
 			Mode = ModeProd
-			env = ".env.prod"
+			env = EnvProd
 		}
 		return nil
 	})
@@ -60,9 +79,9 @@ func main() {
 
 	IPCors = os.Getenv("CORS_DOMAIN")
 	Port := os.Getenv("APP_PORT")
-	if _, err := os.Stat("./tmp"); err != nil {
+	if _, err := os.Stat(TempDir); err != nil {
 		if os.IsNotExist(err) {
-			if err := os.Mkdir("tmp", os.ModePerm); err != nil {
+			if err := os.Mkdir(TempDir, os.ModePerm); err != nil {
 				log.Fatal(err)
 			}
 		}
