@@ -4,3 +4,4 @@ deploy.tar
 .env.prod
 upx
 upx.1
+go-web-code-interactive
