@@ -68,7 +68,7 @@ func NewSecurityValidator() *SecurityValidator {
 		regexp.MustCompile(`(?i)(glob\s*\()`), // glob
 		regexp.MustCompile(`(?i)(exec\s*\()`), // exec
 		regexp.MustCompile(`(?i)(passthru\s*\()`), // passthru
-		regexp.MustCompile(`(?i)($_(GET|POST|COOKIE|SESSION|SERVER|FILES|ENV))`), // superglobals
+		regexp.MustCompile(`(?i)(\$_(GET|POST|COOKIE|SESSION|SERVER|FILES|ENV))`), // superglobals
 		regexp.MustCompile(`(?i)(getenv\s*\()`), // getenv
 		regexp.MustCompile(`(?i)(putenv\s*\()`), // putenv
 		regexp.MustCompile(`(?i)(apache_setenv\s*\()`), // apache_setenv
