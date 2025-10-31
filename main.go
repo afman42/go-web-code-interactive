@@ -13,7 +13,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/afman42/go-web-code-interactive/internal/ratelimiter"
+	"github.com/afman42/go-web-code-interactive/internal/security"
 	"github.com/afman42/go-web-code-interactive/utils"
 )
 
@@ -21,6 +24,12 @@ import (
 var WebContent embed.FS
 
 var IPCors string
+
+// Initialize security validator
+var securityValidator = security.NewSecurityValidator()
+
+// Initialize rate limiter (10 requests per minute per IP)
+var rateLimiter = ratelimiter.NewRateLimiter(time.Minute, 10)
 
 // TODO
 const (
@@ -74,8 +83,21 @@ func main() {
 		return
 	}
 	mux := http.NewServeMux()
-	handler := utils.WrapHandlerWithLogging(http.HandlerFunc(index))
-	mux.Handle("/", handler)
+
+	// Wrap the index handler with logging
+	originalHandler := utils.WrapHandlerWithLogging(http.HandlerFunc(index))
+
+	// Apply rate limiting only to POST requests (code execution)
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			// Apply rate limiting to POST requests
+			rateLimiter.RateLimitHandler(originalHandler).ServeHTTP(w, r)
+		} else {
+			// No rate limiting for GET requests
+			originalHandler.ServeHTTP(w, r)
+		}
+	}))
+
 	if Mode == ModePreview || Mode == ModeProd {
 		mux.Handle("/assets/", http.FileServer(http.FS(dist)))
 		// Static Folder web/public
@@ -115,7 +137,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Access-Control-Allow-Origin", IPCors)
 	w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Requested-With")
 	switch r.Method {
 	case http.MethodGet:
 		tmp, err := template.ParseFS(WebContent, "web/dist/index.html")
@@ -177,6 +199,21 @@ func index(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
+
+		// Validate the code for security issues before execution
+		validationError := securityValidator.ValidateCode(data.Txt, data.Language)
+		if validationError != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(struct {
+				StatusCode int    `json:"statusCode"`
+				Message    string `json:"message"`
+			}{
+				StatusCode: http.StatusBadRequest,
+				Message:    "Security validation failed: " + validationError.Error(),
+			})
+			return
+		}
+
 		filename := "index-" + utils.StringWithCharset(5) + ".js"
 		if data.Language == "php" {
 			filename = "index-" + utils.StringWithCharset(5) + ".php"
@@ -195,8 +232,22 @@ func index(w http.ResponseWriter, r *http.Request) {
 			if data.Language == "node" {
 				data.Txt = data.Txt + utils.TxtJS
 			}
+
+			// Re-validate the combined code after adding template
+			validationError = securityValidator.ValidateCode(data.Txt, data.Language)
+			if validationError != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(struct {
+					StatusCode int    `json:"statusCode"`
+					Message    string `json:"message"`
+				}{
+					StatusCode: http.StatusBadRequest,
+					Message:    "Security validation failed: " + validationError.Error(),
+				})
+				return
+			}
 		}
-		err = os.WriteFile(filename, []byte(data.Txt), 0755)
+		err = os.WriteFile(filename, []byte(data.Txt), 0o755)
 		if err != nil {
 			log.Printf("unable to write file: %v", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
@@ -229,20 +280,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 		}
 		if err != nil {
 			log.Printf("error shell: %v\n", err)
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(struct {
-				StatusCode int    `json:"statusCode"`
-				Message    string `json:"message"`
-			}{
-				StatusCode: http.StatusBadRequest,
-				Message:    "Something Went Wrong, error shell",
-			})
-			return
 		}
-		fmt.Println("--- stdout ---")
-		fmt.Println(out)
-		fmt.Println("--- stderr ---")
-		fmt.Println(errout)
 		data.Stdout = out
 		data.Stderr = errout
 		data.StatusCode = http.StatusOK
